@@ -22,26 +22,22 @@ The first run installs everything it needs, which takes a few minutes. After tha
 
 ## Demo accounts
 
-| Username | Password | Who | Can |
-|---|---|---|---|
-| `admin` | `admin123` | Cdr. Mehta, Distribution Officer | share documents, trace leaks, control nodes, audit log, tamper demo, reset |
-| `rao` | `rao123` | Lt. Cdr. Rao · #07 | open documents shared with him |
-| `iyer` | `iyer123` | Cdr. Iyer · #11 | 〃 |
-| `sharma` | `sharma123` | Lt. Sharma · #14 | 〃 |
-| `fernandes` | `fernandes123` | Cdr. Fernandes · #19 | 〃 |
-| `bose` | `bose123` | Lt. Cdr. Bose · #23 | 〃 |
+| Username | Password | Role |
+|---|---|---|
+| `admin` | `admin123` | Distribution Officer: shares documents, traces leaks, adds/deactivates people, controls nodes, audit log |
+| `officer1` … `officer10` | `officer1123` … `officer10123` (username + `123`) | Officers #01–#10: open documents shared with them |
 
-On the sign-in page you can also click any row to fill it in.
+The admin can add more officers under **People**. Each one gets their own post-quantum keys, and their name and number are printed on every copy they open.
 
 ## The demo, step by step (≈ 5 minutes)
 
-1. **admin → Distribute**: drop a PDF or photo, set *SECRET*, tick **Rao** and **Iyer**, then press *Encrypt & distribute*. This shows the key split into 5 shares, with the key itself discarded.
-2. Sign out, then **bose → Open document** and paste the ID. He's **refused**, because he's not a recipient, and the attempt is logged.
-3. **rao → Inbox → Open**. Watch the 5 nodes vote: N5 is offline, so the result is **4/5, quorum reached**. The pipeline shows receipt signed, block sealed, 3 shares released, key delivered via ML-KEM, and the document marked. The copy comes back in full colour. Download it.
-4. **rao → Ledger → Verify entire chain**: every block is shown as *Verified*.
-5. **admin → Trace a leak**: pick the document and drop Rao's downloaded copy in. The result is **Lt. Cdr. Rao, #07**, with the ledger evidence. It still works if the copy is resized, screenshotted, or re-saved as JPEG.
-6. **admin → Ledger → Tamper**: rewrite block #1 to blame Bose, then press **Verify**. The result is **TAMPERED** at block #1. Try *Edit + recompute its hash* too: it is still caught, because the node signatures and the next block's link break. Then press *Undo all tampering*.
-7. **admin → Nodes**: take N4 offline (only 3 left). Now Rao can't open anything and **the file stays locked**. Bring N4 back online.
+1. **admin → Distribute**: drop a PDF or photo, set *SECRET*, tick **Officer 1** and **Officer 2**, then press *Encrypt & distribute*. This shows the key split into 5 shares, with the key itself discarded.
+2. Sign out, then **officer3 → Open document** and paste the ID. He's **refused**, because he's not a recipient, and the attempt is logged.
+3. **officer1 → My documents → Open**. Watch the 5 nodes vote: N5 is offline, so the result is **4/5, quorum reached**. The pipeline shows receipt signed, block sealed, 3 shares released, key delivered via ML-KEM, and the document marked. The copy comes back in full colour. Download it.
+4. **officer1 → Ledger → Verify entire chain**: every block is shown as *Verified*.
+5. **admin → Trace a leak**: pick the document and drop Officer 1's downloaded copy in. The result is **Officer 1, #01**, with the ledger evidence. It still works if the copy is resized, screenshotted, or re-saved as JPEG.
+6. **admin → Ledger → Tamper**: rewrite block #1 to blame Officer 3, then press **Verify**. The result is **TAMPERED** at block #1. Try *Edit + recompute its hash* too: it is still caught, because the node signatures and the next block's link break. Then press *Undo all tampering*.
+7. **admin → Nodes**: take N4 offline (only 3 left). Now officer1 can't open anything and **the file stays locked**. Bring N4 back online.
 8. **admin → Audit log**: every login, share, open, refusal, trace and tamper is listed.
 
 Before the real demo, use **admin → System → Reset demo data** to start clean.
@@ -57,6 +53,7 @@ Before the real demo, use **admin → System → Reset demo data** to start clea
 | Chain | SHA3-256 block hashes, each block linked to the previous one. `Verify` re-checks every hash, link, officer signature and node vote |
 | Key delivery | The rebuilt key is wrapped under the officer's **ML-KEM-768** (FIPS 203) public key |
 | Pixel watermark | DCT mark in the brightness channel on every page. Keeps colour, is invisible (PSNR ≈ 40–47 dB), and survives resizing, JPEG re-saving, shrink + JPEG, single-page screenshots |
+| Visible watermark | Every page of every copy: faint diagonal text with the officer's name and copy number, plus a footer band showing officer, classification, date/time (IST) and session. Applied on top of the invisible mark, so tracing still works |
 | Text watermark | Zero-width-character officer tag in the PDF metadata. A second, independent trace path |
 | Trace | Majority vote across pages, a confidence score, both layers compared, and a match against the ledger |
 | Access control | JWT sessions. scrypt-hashed passwords. Lockout after 5 wrong tries. Admin/officer roles. Recipient lists enforced |
@@ -71,6 +68,10 @@ Before the real demo, use **admin → System → Reset demo data** to start clea
 - Not built: layout (line/word-shift) watermark, bait details, collusion-resistant (Tardos) codes, Reed–Solomon error correction. These are in the design but not in this prototype.
 - Demo passwords are simple on purpose. Change `NISHAAN_JWT_SECRET` and the seed passwords in `auth.py` for anything real.
 
+## Security
+
+See **[SECURITY.md](SECURITY.md)** for the full review: 7 vulnerabilities found and fixed, 43 attack tests, and known limits.
+
 ## Tests
 
 ```bash
@@ -78,9 +79,9 @@ cd backend
 python3 tests/run_10x.py
 ```
 
-This runs **60 end-to-end checks, 10 times**, each on a fresh temporary database, followed by a restart-survival check every run. It never touches your real demo data. Stop your normal server first, since the test needs port 8000.
+This runs **78 feature checks + 43 security (attack) checks, 10 times**, each on a fresh temporary database, followed by a restart-survival check every run. It never touches your real demo data. Stop your normal server first, since the test needs port 8000.
 
-Last result: **10/10 runs passed.**
+Last result: **10/10 runs passed (121 checks each).**
 
 ## Layout
 
@@ -108,7 +109,7 @@ nishaan_mvp_v4/
 - **Crypto + auth**: `crypto.py`, `auth.py`
 - **Ledger**: `ledger.py`
 - **Watermark**: `watermark.py`, `pdf_support.py`. Spare time: test phone photos of printed pages
-- **Frontend (2 people)**: `frontend/index.html`. Edit it and press F5; no restart needed
+- **Frontend (2 people)**: `frontend/index.html` (GitHub-style, light + dark theme). Edit it and press F5; no restart needed
 - **Integration + video + submission**: `main.py`, README, demo script, GitHub, YouTube, final PPT slide
 
 ## API (for the curious)

@@ -13,6 +13,8 @@ Endpoints (all JSON unless noted; "auth" = needs Authorization: Bearer <token>):
   POST /login                  {username, password} -> {token, user}
   GET  /me                     auth: who am I
   GET  /users                  auth: roster + public-key fingerprints
+  POST /users                  admin: add a person {username, name, password, officer_id?}
+  POST /users/{u}/active       admin: {active: true|false} deactivate / reactivate an account
   GET  /nodes                  auth: ledger nodes, online state, key fingerprints
   POST /nodes/toggle           admin: {name, online}
   POST /documents              admin: multipart file + title + classification + recipients (comma list)
@@ -33,8 +35,10 @@ import json
 import time
 import uuid
 import base64
+import datetime
 import shutil
 
+os.environ.setdefault("OPENCV_IO_MAX_IMAGE_PIXELS", str(60_000_000))   # refuse decompression bombs
 import numpy as np
 import cv2
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, Depends
@@ -53,12 +57,78 @@ FRONTEND = os.path.join(os.path.dirname(BACKEND), "frontend", "index.html")
 CLASSIFICATIONS = ["RESTRICTED", "CONFIDENTIAL", "SECRET", "TOP SECRET"]
 
 app = FastAPI(title="NISHAAN", version=VERSION)
+# The console is served by this same server, so browsers need no cross-origin access.
+# Only localhost origins are allowed (plus any listed in NISHAAN_ALLOWED_ORIGINS).
+ALLOWED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"] + \
+    [o.strip() for o in os.environ.get("NISHAAN_ALLOWED_ORIGINS", "").split(",") if o.strip()]
+DEMO_MODE = os.environ.get("NISHAAN_DEMO", "1") == "1"      # tamper/restore/reset demo endpoints
+MAX_PDF_PAGES = 200
+MAX_PIXELS = 60_000_000
+
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
-    allow_headers=["*", "Authorization", "Content-Type"],
+    CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
     expose_headers=["X-Nishaan-Meta", "X-Session", "X-Block-Hash", "X-Votes", "X-Officer",
                     "Content-Disposition"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    resp = await call_next(request)
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Content-Security-Policy"] = "frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+    resp.headers["Cache-Control"] = "no-store"          # never cache secret documents or API data
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
+async def read_upload(file: UploadFile) -> bytes:
+    """Read an upload in chunks and stop as soon as it exceeds the limit
+    (instead of loading an arbitrarily large body into memory first)."""
+    buf = bytearray()
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        buf += chunk
+        if len(buf) > MAX_UPLOAD:
+            raise HTTPException(413, f"file too large (max {MAX_UPLOAD // (1024 * 1024)} MB)")
+    if not buf:
+        raise HTTPException(400, "the file is empty")
+    return bytes(buf)
+
+
+def decode_image(raw: bytes):
+    try:
+        img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
+    except cv2.error:
+        img = None
+    if img is not None and img.shape[0] * img.shape[1] > MAX_PIXELS:
+        raise HTTPException(413, "image dimensions are too large")
+    return img
+
+
+def safe_pdf_pages(raw: bytes):
+    try:
+        info = pdf_support.pdf_page_sizes(raw)
+    except Exception:
+        raise HTTPException(400, "that PDF couldn't be read (damaged or password-protected?)")
+    if not info:
+        raise HTTPException(400, "that PDF has no pages")
+    if len(info) > MAX_PDF_PAGES:
+        raise HTTPException(413, f"PDF has too many pages (max {MAX_PDF_PAGES})")
+    if any(w * h > MAX_PIXELS for w, h in info):
+        raise HTTPException(413, "a PDF page is too large to process")
+    return pdf_support.pdf_to_pages(raw)
+
+
+def all_shares_key(doc_id: str) -> bytes:
+    """Forensic key rebuild for tracing (admin only): any 3 of the 5 stored shares."""
+    rows = db.get_shares(doc_id, [n["name"] for n in ledger.status()])
+    return crypto.rebuild_key([(r["idx"], r["half1"], r["half2"]) for r in rows[:3]])
 
 
 def bootstrap():
@@ -76,9 +146,14 @@ def current_user(authorization: str = Header(None)) -> dict:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(401, "not logged in")
     claims = auth.verify_token(authorization.split(" ", 1)[1].strip())
-    if not claims or not db.get_user(claims["username"]):
+    row = db.get_user(claims["username"]) if claims else None
+    if not row:
         raise HTTPException(401, "session expired or invalid -- please log in again")
-    return claims
+    if not row["active"]:
+        raise HTTPException(401, "this account has been deactivated")
+    # identity and role come from the database, not from the token's claims
+    return {"username": row["username"], "officer_id": row["officer_id"], "name": row["name"],
+            "role": row["role"], "exp": claims["exp"]}
 
 
 def admin_only(user: dict = Depends(current_user)) -> dict:
@@ -101,7 +176,7 @@ def health():
     return {"ok": True, "version": VERSION, "algorithms": {
         "file": "AES-256-GCM", "key_split": "Shamir 3-of-5", "signatures": crypto.SIG_ALG,
         "key_delivery": crypto.KEM_ALG, "hash": "SHA3-256", "passwords": "scrypt"},
-        "nodes_online": len(ledger.online_node_names()), "quorum": ledger.QUORUM}
+        "nodes_online": len(ledger.online_node_names()), "quorum": ledger.QUORUM, "demo_mode": DEMO_MODE}
 
 
 class LoginBody(BaseModel):
@@ -128,6 +203,39 @@ def me(user: dict = Depends(current_user)):
 @app.get("/users")
 def users(user: dict = Depends(current_user)):
     return auth.roster()
+
+
+class NewUser(BaseModel):
+    username: str
+    name: str
+    password: str
+    officer_id: int | None = None
+
+
+@app.post("/users")
+def add_user(body: NewUser, user: dict = Depends(admin_only)):
+    row, why = auth.create_user(body.username, body.name, body.password, body.officer_id)
+    if not row:
+        raise HTTPException(400, why)
+    db.log_event("USER_ADDED", user["username"], None, f"{row['name']} ({row['username']}, #{row['officer_id']:02d}) added")
+    return next(u for u in auth.roster() if u["username"] == row["username"])
+
+
+class Activation(BaseModel):
+    active: bool
+
+
+@app.post("/users/{username}/active")
+def set_active(username: str, body: Activation, user: dict = Depends(admin_only)):
+    row = db.get_user(username.lower())
+    if not row:
+        raise HTTPException(404, "no such user")
+    if row["role"] == "admin":
+        raise HTTPException(400, "the Distribution Officer account cannot be deactivated")
+    db.set_user_active(row["username"], body.active)
+    db.log_event("USER_REACTIVATED" if body.active else "USER_DEACTIVATED", user["username"], None,
+                 f"{row['name']} ({row['username']}) {'reactivated' if body.active else 'deactivated'}")
+    return next(u for u in auth.roster() if u["username"] == row["username"])
 
 
 # ---------------------------------------------------------------- nodes
@@ -164,31 +272,22 @@ def _doc_view(d, include_recipients=True):
 @app.post("/documents")
 async def share(file: UploadFile = File(...), title: str = Form(""), classification: str = Form("RESTRICTED"),
                 recipients: str = Form(""), user: dict = Depends(admin_only)):
-    raw = await file.read()
-    if not raw:
-        raise HTTPException(400, "the file is empty")
-    if len(raw) > MAX_UPLOAD:
-        raise HTTPException(413, f"file too large (max {MAX_UPLOAD // (1024 * 1024)} MB)")
-    rec = sorted({r.strip().lower() for r in recipients.split(",") if r.strip()})
-    officers = {u["username"] for u in auth.roster() if u["role"] == "officer"}
+    raw = await read_upload(file)
+    rec = sorted({r.strip().lower() for r in recipients.split(",") if r.strip()}, key=lambda u: (re.sub(r'\d+', '', u), int(re.sub(r'\D', '', u) or 0)))
+    officers = {u["username"] for u in auth.roster() if u["role"] == "officer" and u["active"]}
     bad = [r for r in rec if r not in officers]
     if bad:
-        raise HTTPException(400, f"unknown recipient(s): {', '.join(bad)}")
+        raise HTTPException(400, f"unknown or deactivated recipient(s): {', '.join(bad)}")
     if not rec:
         raise HTTPException(400, "pick at least one recipient officer")
     classification = classification.upper() if classification.upper() in CLASSIFICATIONS else "RESTRICTED"
 
     is_pdf = pdf_support.is_pdf(file.filename or "", raw)
     if is_pdf:
-        try:
-            pages = pdf_support.pdf_to_pages(raw)
-        except Exception:
-            raise HTTPException(400, "that PDF couldn't be read (damaged or password-protected?)")
-        if not pages:
-            raise HTTPException(400, "that PDF has no pages")
+        pages = safe_pdf_pages(raw)
         n_pages, orig_bytes = len(pages), raw
     else:
-        img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
+        img = decode_image(raw)
         if img is None:
             raise HTTPException(400, "upload a PDF or a PNG/JPG image")
         n_pages, orig_bytes = 1, cv2.imencode(".png", img)[1].tobytes()
@@ -199,11 +298,9 @@ async def share(file: UploadFile = File(...), title: str = Form(""), classificat
     del file_key                                   # server keeps only the 5 shares, never the key
 
     ct_path = os.path.join(STORE, f"{doc_id}.ct")
-    orig_path = os.path.join(STORE, f"{doc_id}.ref" + (".pdf" if is_pdf else ".png"))
-    with open(ct_path, "wb") as f:
+    with open(ct_path, "wb") as f:                 # ONLY the ciphertext is stored -- no plaintext copy on disk
         f.write(ct)
-    with open(orig_path, "wb") as f:               # sealed reference copy, used only for tracing
-        f.write(orig_bytes)
+    orig_path = ""
 
     title = (title or os.path.splitext(file.filename or "document")[0]).strip()[:120]
     node_names = [n["name"] for n in ledger.status()]
@@ -269,13 +366,24 @@ def open_doc(doc_id: str, user: dict = Depends(current_user)):
     raw = crypto.decrypt_file(ct, doc["nonce"], file_key)
 
     oid = urow["officer_id"]
+    # visible watermark text (drawn on top of the invisible mark)
+    diag = f"{urow['name'].upper()}   #{oid:02d}   NISHAAN COPY"
+    ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    stamp_time = datetime.datetime.fromtimestamp(receipt["time"], ist).strftime("%d %b %Y %H:%M IST").upper()
+
+    def mark(page, n=None, total=None):
+        foot = (f"NISHAAN  |  COPY #{oid:02d}  |  {urow['name'].upper()}  |  {doc['classification']}  |  "
+                f"{stamp_time}  |  SESSION {receipt['session']}" + (f"  |  PAGE {n}/{total}" if total and total > 1 else ""))
+        return watermark.visible_stamp(watermark.embed_pixel(page, oid), diag, foot)
+
     if doc["doctype"] == "pdf":
-        pages = [watermark.embed_pixel(p, oid) for p in pdf_support.pdf_to_pages(raw)]
+        src = pdf_support.pdf_to_pages(raw)
+        pages = [mark(p, i + 1, len(src)) for i, p in enumerate(src)]
         out = pdf_support.pages_to_pdf(pages, oid, title=doc["title"])
         media, ext = "application/pdf", "pdf"
     else:
         img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
-        out = cv2.imencode(".png", watermark.embed_pixel(img, oid))[1].tobytes()
+        out = cv2.imencode(".png", mark(img))[1].tobytes()
         media, ext = "image/png", "png"
 
     fname = f"{_safe_stem(doc['filename'])}__copy-{oid:02d}.{ext}"
@@ -322,6 +430,8 @@ class TamperBody(BaseModel):
 
 @app.post("/ledger/tamper")
 def tamper(body: TamperBody, user: dict = Depends(admin_only)):
+    if not DEMO_MODE:
+        raise HTTPException(404, "not available outside demo mode")
     target = db.get_user(body.username.lower())
     if not target:
         raise HTTPException(400, "unknown officer to frame")
@@ -335,6 +445,8 @@ def tamper(body: TamperBody, user: dict = Depends(admin_only)):
 
 @app.post("/ledger/restore")
 def restore(user: dict = Depends(admin_only)):
+    if not DEMO_MODE:
+        raise HTTPException(404, "not available outside demo mode")
     db.restore_all_blocks()
     db.log_event("RESTORE", user["username"], None, "DEMO: all blocks restored to their sealed versions")
     return ledger.verify_chain()
@@ -346,26 +458,23 @@ async def trace(doc_id: str = Form(...), file: UploadFile = File(...), user: dic
     doc = db.get_document(doc_id.strip())
     if doc is None:
         raise HTTPException(404, "no document with that id")
-    raw = await file.read()
-    if not raw:
-        raise HTTPException(400, "the file is empty")
-    if len(raw) > MAX_UPLOAD:
-        raise HTTPException(413, "file too large")
-    with open(doc["orig_path"], "rb") as f:
-        ref_raw = f.read()
+    raw = await read_upload(file)
+    # rebuild the original in memory from the ciphertext + key shares (never stored in plain form)
+    with open(doc["ct_path"], "rb") as f:
+        ct = f.read()
+    if crypto.sha3(ct) != doc["ct_hash"]:
+        raise HTTPException(500, "stored ciphertext was modified on disk")
+    ref_raw = crypto.decrypt_file(ct, doc["nonce"], all_shares_key(doc["doc_id"]))
 
     layers = {"pixel": None, "pixel_confidence": 0.0, "metadata": None, "pages_checked": 0}
     if pdf_support.is_pdf(file.filename or "", raw):
-        try:
-            sus_pages = pdf_support.pdf_to_pages(raw)
-        except Exception:
-            raise HTTPException(400, "that PDF couldn't be read")
+        sus_pages = safe_pdf_pages(raw)
         ref_pages = pdf_support.pdf_to_pages(ref_raw) if doc["doctype"] == "pdf" else \
             [cv2.imdecode(np.frombuffer(ref_raw, np.uint8), cv2.IMREAD_COLOR)]
         results = [watermark.extract_pixel_detail(s, r) for s, r in zip(sus_pages, ref_pages)]
         layers["metadata"] = pdf_support.read_pdf_metadata_tag(raw)
     else:
-        sus = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
+        sus = decode_image(raw)
         if sus is None:
             raise HTTPException(400, "upload the leaked copy as a PDF or PNG/JPG image")
         if doc["doctype"] == "pdf":   # a photo/screenshot of one page: try every page, keep the best
@@ -385,6 +494,8 @@ async def trace(doc_id: str = Form(...), file: UploadFile = File(...), user: dic
 
     traced = layers["pixel"] if layers["pixel"] is not None else layers["metadata"]
     urow = db.get_user_by_officer(traced) if traced is not None else None
+    if urow is not None and urow["role"] == "admin":      # the admin never receives marked copies
+        urow = None
     if urow is None:
         db.log_event("TRACE", user["username"], doc_id, "no NISHAAN mark found / unknown officer")
         return {"found": False, "layers": layers,
@@ -413,6 +524,8 @@ def audit(user: dict = Depends(admin_only)):
 
 @app.post("/admin/reset")
 def reset(user: dict = Depends(admin_only)):
+    if not DEMO_MODE:
+        raise HTTPException(404, "not available outside demo mode")
     db.wipe()
     shutil.rmtree(STORE, ignore_errors=True)
     auth.reset_lockouts()

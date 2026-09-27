@@ -6,7 +6,7 @@ matters: node and officer signing keys live here, so old ledger blocks can still
 verified after a restart.
 
 Tables:
-  users(username, pw_salt, pw_hash, officer_id, name, role, dsa_pub, dsa_sk, kem_pub, kem_sk)
+  users(username, pw_salt, pw_hash, officer_id, name, role, dsa_pub, dsa_sk, kem_pub, kem_sk, active, created_at)
   nodes(name, dsa_pub, dsa_sk, online)
   documents(doc_id, title, filename, doctype, pages, classification, nonce, ct_path,
             orig_path, ct_hash, created_by, created_at)
@@ -33,7 +33,8 @@ def get_conn():
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     username TEXT PRIMARY KEY, pw_salt BLOB, pw_hash BLOB, officer_id INTEGER UNIQUE,
-    name TEXT, role TEXT, dsa_pub BLOB, dsa_sk BLOB, kem_pub BLOB, kem_sk BLOB
+    name TEXT, role TEXT, dsa_pub BLOB, dsa_sk BLOB, kem_pub BLOB, kem_sk BLOB,
+    active INTEGER NOT NULL DEFAULT 1, created_at REAL
 );
 CREATE TABLE IF NOT EXISTS nodes (
     name TEXT PRIMARY KEY, dsa_pub BLOB, dsa_sk BLOB, online INTEGER
@@ -64,6 +65,11 @@ CREATE TABLE IF NOT EXISTS events (
 def init_db():
     conn = get_conn()
     conn.executescript(SCHEMA)
+    cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "active" not in cols:          # upgrade older databases in place
+        conn.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+    if "created_at" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN created_at REAL")
     conn.commit()
     conn.close()
 
@@ -105,8 +111,18 @@ def count_users():
 
 
 def add_user(username, salt, pw_hash, officer_id, name, role, dsa_pub, dsa_sk, kem_pub, kem_sk):
-    _exec("INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?,?)",
-          (username, salt, pw_hash, officer_id, name, role, dsa_pub, dsa_sk, kem_pub, kem_sk))
+    _exec("INSERT INTO users (username, pw_salt, pw_hash, officer_id, name, role, dsa_pub, dsa_sk, kem_pub, kem_sk, active, created_at) "
+          "VALUES (?,?,?,?,?,?,?,?,?,?,1,?)",
+          (username, salt, pw_hash, officer_id, name, role, dsa_pub, dsa_sk, kem_pub, kem_sk, time.time()))
+
+
+def set_user_active(username, active):
+    _exec("UPDATE users SET active=? WHERE username=?", (int(active), username))
+
+
+def next_officer_id():
+    row = _one("SELECT MAX(officer_id) AS m FROM users")
+    return max(11, (row["m"] or 0) + 1)
 
 
 def get_user(username):
@@ -118,7 +134,7 @@ def get_user_by_officer(officer_id):
 
 
 def list_users():
-    return _all("SELECT username, officer_id, name, role, dsa_pub, kem_pub FROM users ORDER BY officer_id")
+    return _all("SELECT username, officer_id, name, role, dsa_pub, kem_pub, active, created_at FROM users ORDER BY officer_id")
 
 
 # ---------------------------------------------------------------- nodes

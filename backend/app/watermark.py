@@ -161,3 +161,49 @@ def read_text_tag(marked_line: str, n=16) -> int | None:
         return None
     bits = "".join("0" if c == _ZW["0"] else "1" for c in zw[:n])
     return int(bits, 2)
+
+
+# ---------------------------------------------------------------- visible layer (deterrent)
+def visible_stamp(img: np.ndarray, diag_text: str, footer_text: str, opacity: float = 0.13) -> np.ndarray:
+    """Adds a VISIBLE watermark on top of an (already invisibly-marked) page:
+      - faint diagonal text repeated across the whole page (the reader's name/copy no.)
+      - a solid footer band stating who the copy belongs to, when and which session
+    Called AFTER embed_pixel(), so the invisible mark's block layout still matches the
+    stored original; the few blocks under the text just add noise to a majority vote."""
+    gray = img.ndim == 2
+    out = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if gray else img.copy()
+    if out.shape[2] == 4:
+        out = cv2.cvtColor(out, cv2.COLOR_BGRA2BGR)
+    h, w = out.shape[:2]
+
+    # --- diagonal tiled text, drawn on a big canvas, rotated, then blended
+    d = int((h * h + w * w) ** 0.5) + 20
+    canvas = np.zeros((d, d), np.uint8)
+    scale = max(0.6, min(w, h) / 900.0)
+    thick = max(1, int(round(scale * 2)))
+    (tw, th), _ = cv2.getTextSize(diag_text, cv2.FONT_HERSHEY_SIMPLEX, scale, thick)
+    step_x, step_y = tw + int(120 * scale), th + int(150 * scale)
+    for row, y in enumerate(range(th, d, step_y)):
+        off = (row % 2) * (step_x // 2)
+        for x in range(-step_x + off, d, step_x):
+            cv2.putText(canvas, diag_text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, 255, thick, cv2.LINE_AA)
+    rot = cv2.warpAffine(canvas, cv2.getRotationMatrix2D((d / 2, d / 2), 30, 1.0), (d, d))
+    y0, x0 = (d - h) // 2, (d - w) // 2
+    mask = rot[y0:y0 + h, x0:x0 + w].astype(np.float32) / 255.0 * opacity
+    f = out.astype(np.float32)
+    lum = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    ink = np.where(lum < 115, 235.0, 70.0)[..., None]             # light text on dark areas, dark text on light
+    f = f * (1 - mask[..., None]) + ink * mask[..., None]
+
+    # --- footer band
+    fs = max(0.45, w / 2200.0)
+    ft = max(1, int(round(fs * 2)))
+    (_, fh), _ = cv2.getTextSize(footer_text, cv2.FONT_HERSHEY_SIMPLEX, fs, ft)
+    band = fh + int(22 * fs + 10)
+    f[h - band:h, :] = f[h - band:h, :] * 0.15 + np.array([40, 30, 12], np.float32) * 0.85   # deep teal-ink band
+    out = np.clip(f, 0, 255).astype(np.uint8)
+    # shrink footer text until it fits the width
+    while cv2.getTextSize(footer_text, cv2.FONT_HERSHEY_SIMPLEX, fs, ft)[0][0] > w - 24 and fs > 0.3:
+        fs -= 0.03
+    cv2.putText(out, footer_text, (12, h - band // 2 + fh // 2), cv2.FONT_HERSHEY_SIMPLEX, fs, (255, 255, 255), ft, cv2.LINE_AA)
+    return cv2.cvtColor(out, cv2.COLOR_BGR2GRAY) if gray else out

@@ -22,6 +22,15 @@ def is_pdf(filename: str, data: bytes) -> bool:
     return filename.lower().endswith(".pdf") or data[:4] == b"%PDF"
 
 
+def pdf_page_sizes(data: bytes) -> list[tuple[int, int]]:
+    """Pixel size of every page at RENDER_DPI, without rendering anything."""
+    doc = pymupdf.open(stream=data, filetype="pdf")
+    z = RENDER_DPI / 72
+    sizes = [(int(p.rect.width * z), int(p.rect.height * z)) for p in doc]
+    doc.close()
+    return sizes
+
+
 def pdf_to_pages(data: bytes) -> list[np.ndarray]:
     """PDF bytes -> list of colour (BGR) page images (numpy arrays)."""
     doc = pymupdf.open(stream=data, filetype="pdf")

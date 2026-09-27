@@ -1,779 +1,843 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NISHAAN Console</title>
-<!-- OWNER: Person D + E (frontend). Single self-contained file: no internet needed,
-     no libraries. Served by the backend at http://localhost:8000/ -->
+<title>NISHAAN Command</title>
+<!-- OWNER: frontend team. One self-contained file, no internet or libraries needed.
+     Served by the backend at http://localhost:8000/ . Edit, then press F5. -->
+<script>
+  // apply saved / system theme before first paint (no flash)
+  (function(){ var t=null; try{ t=localStorage.getItem("nishaan_theme"); }catch(e){}
+    if(!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t); })();
+</script>
 <style>
-:root{
-  --paper:#ECE7DB; --paper-2:#F5F1E8; --card:#FBF9F4; --ink:#121B1A; --ink-2:#3D4847; --mute:#6F7775;
-  --rule:#C8C0AE; --rule-2:#DCD5C5; --teal:#0B6B72; --teal-d:#07474C; --teal-l:#D5E7E6;
-  --claret:#8C1D40; --claret-l:#F1DCE2; --ok:#2C7A4B; --ok-l:#DCEFE3; --warn:#A8660B; --warn-l:#F6E7CF;
-  --head:"Bahnschrift","DIN Alternate","DIN Condensed","Arial Narrow","Roboto Condensed",sans-serif;
-  --body:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
-  --mono:"Cascadia Mono","Consolas","SFMono-Regular",ui-monospace,monospace;
+:root, [data-theme="light"]{
+  --bg:#eef1f6; --panel:#ffffff; --panel-2:#f5f7fb; --hover:#e9eef6; --inset:#e4e9f2;
+  --border:#d2d9e5; --border-2:#e3e8f0;
+  --fg:#0f1a2e; --fg-2:#34425c; --muted:#5b6780;
+  --hdr:#0b1f44; --hdr-2:#081834; --hdr-fg:#ffffff; --hdr-muted:#aebbd6;
+  --teal:#1b3a78; --teal-h:#142d5e; --teal-fg:#ffffff; --teal-soft:#e3eaf7; --teal-line:#9fb2d9;
+  --ok:#1f7a4d; --ok-soft:#e1f2e8; --ok-line:#93cdb0;
+  --bad:#c62f3a; --bad-soft:#fbe7e8; --bad-line:#eca4a9;
+  --warn:#946300; --warn-soft:#fbf1d8; --warn-line:#dfc070;
+  --info:#2d5fa8; --info-soft:#e6eef9; --info-line:#a6bfe3;
+  --shadow:0 1px 2px rgba(11,31,68,.06),0 2px 8px rgba(11,31,68,.06); --pop:0 12px 32px rgba(11,31,68,.2);
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#070d1a; --panel:#0d1628; --panel-2:#111d33; --hover:#15223b; --inset:#050a14;
+  --border:#24334f; --border-2:#1a2740;
+  --fg:#e4eaf5; --fg-2:#b6c2d8; --muted:#8795b0;
+  --hdr:#0a1a3a; --hdr-2:#07142d; --hdr-fg:#eef3ff; --hdr-muted:#9aabcf;
+  --teal:#4a7fd4; --teal-h:#5b8fe3; --teal-fg:#ffffff; --teal-soft:#13223f; --teal-line:#2c4a80;
+  --ok:#4cc38a; --ok-soft:#0f2519; --ok-line:#256b48;
+  --bad:#ff6b73; --bad-soft:#2a1216; --bad-line:#8a2f37;
+  --warn:#e0b04a; --warn-soft:#261f0e; --warn-line:#77601f;
+  --info:#6fa3ee; --info-soft:#0f1d35; --info-line:#2d4f86;
+  --shadow:0 1px 2px rgba(0,0,0,.45); --pop:0 12px 32px rgba(0,0,0,.65);
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body)}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif}
 body{min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--teal);text-decoration:none;font-weight:500} a:hover{text-decoration:underline}
 button,input,select{font:inherit;color:inherit}
 .hidden{display:none!important}
-.mono{font-family:var(--mono);font-size:.86em;letter-spacing:0}
-.mute{color:var(--mute)}
-.small{font-size:.84rem}
-a{color:var(--teal-d)}
+.mono{font-family:"Cascadia Mono",Consolas,ui-monospace,Menlo,monospace;font-size:12px}
+.muted{color:var(--muted)} .small{font-size:12px} .nowrap{white-space:nowrap}
+svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;flex:none}
+.ic-muted{color:var(--muted)}
 
-/* classification banners, like the strip on real classified paper */
-.banner{background:var(--claret);color:#fff;text-align:center;font:600 11px/1 var(--head);letter-spacing:.35em;padding:5px 0;text-transform:uppercase}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 16px;border:1px solid var(--teal);border-radius:8px;background:transparent;color:var(--teal);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;line-height:1}
+.btn:hover{background:var(--teal-soft);text-decoration:none}
+.btn.primary{background:var(--teal);color:var(--teal-fg)} .btn.primary:hover{background:var(--teal-h);border-color:var(--teal-h)}
+.btn.danger{border-color:var(--bad);color:var(--bad)} .btn.danger:hover{background:var(--bad);color:#fff}
+.btn.sm{height:30px;padding:0 12px;font-size:13px}
+.btn.block{width:100%}
+.btn.icon{width:36px;padding:0}
+.btn[disabled]{opacity:.6;cursor:progress}
+input.form,select.form{width:100%;height:38px;padding:6px 12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;outline:none}
+input.form:focus,select.form:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+.field{margin-bottom:20px} .field>label{display:block;font-weight:600;margin-bottom:6px;color:var(--fg)} .field .hint{color:var(--muted);font-size:12px;margin-top:6px}
+.req{color:var(--bad)}
 
-/* ---------- login ---------- */
-#login{flex:1;display:grid;grid-template-columns:1.15fr 1fr;min-height:calc(100vh - 42px)}
-.intro{background:var(--teal-d);color:#E9F2F1;padding:56px 56px 40px;position:relative;overflow:hidden;display:flex;flex-direction:column}
-.intro:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.05) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(255,255,255,.05) 31px 32px);pointer-events:none}
-.wordmark{font:700 64px/0.9 var(--head);letter-spacing:.06em;margin:0}
-.wordmark small{display:block;font:400 22px/1.2 var(--body);letter-spacing:.02em;opacity:.75;margin-top:10px}
-.tagline{font:400 28px/1.25 var(--head);max-width:520px;margin:34px 0 30px;color:#fff}
-.tagline b{color:#F3C4D1;font-weight:600}
-.steps{list-style:none;padding:0;margin:0;display:grid;gap:0;max-width:540px;border-top:1px solid rgba(255,255,255,.2)}
-.steps li{display:grid;grid-template-columns:44px 1fr;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.2)}
-.steps b{font:600 13px/1.6 var(--mono);color:#9FD0CD}
-.intro .foot{margin-top:auto;padding-top:28px;font:12px var(--mono);opacity:.6;letter-spacing:.04em}
-.loginpane{padding:56px 48px;display:flex;flex-direction:column;justify-content:center;max-width:560px}
-.loginpane h2{font:600 26px var(--head);letter-spacing:.04em;margin:0 0 4px;text-transform:uppercase}
-label{display:block;font:600 11px var(--head);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:16px 0 6px}
-input[type=text],input[type=password],select,input:not([type]){width:100%;background:var(--card);border:1px solid var(--rule);border-bottom:2px solid var(--ink);padding:10px 12px;outline:none;border-radius:0}
-input:focus,select:focus{border-color:var(--teal);border-bottom-color:var(--teal);background:#fff}
-.btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:0;padding:11px 20px;font:600 13px var(--head);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border-radius:0}
-.btn:hover{background:var(--teal-d)}
-.btn.teal{background:var(--teal)} .btn.teal:hover{background:var(--teal-d)}
-.btn.claret{background:var(--claret)} .btn.claret:hover{background:#6c1531}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)} .btn.ghost:hover{background:var(--ink);color:#fff}
-.btn.sm{padding:6px 12px;font-size:11px}
-.btn[disabled]{opacity:.55;cursor:progress}
-a.btn{text-decoration:none}
-.acct{width:100%;border-collapse:collapse;margin-top:26px;font-size:13px}
-.acct caption{text-align:left;font:600 11px var(--head);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding-bottom:6px}
-.acct td{border-top:1px solid var(--rule-2);padding:7px 6px}
-.acct tr{cursor:pointer} .acct tr:hover td{background:var(--paper-2)}
-.acct td:last-child{text-align:right;color:var(--mute)}
-.err{color:var(--claret);min-height:22px;margin-top:10px;font-size:14px}
+/* tags: square, uppercase, stamp-like */
+.label{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;line-height:16px;color:var(--muted);white-space:nowrap;background:var(--panel)}
+.label svg.ic{width:12px;height:12px}
+.label.green{color:var(--ok);border-color:var(--ok-line);background:var(--ok-soft)}
+.label.red{color:var(--bad);border-color:var(--bad-line);background:var(--bad-soft)}
+.label.yellow{color:var(--warn);border-color:var(--warn-line);background:var(--warn-soft)}
+.label.blue{color:var(--info);border-color:var(--info-line);background:var(--info-soft)}
+.label.solid-red{background:var(--bad);border-color:var(--bad);color:#fff}
+.counter{background:var(--inset);border-radius:4px;padding:0 6px;font-size:12px;font-weight:600;line-height:18px;min-width:20px;text-align:center;color:var(--fg-2)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:28%;color:#fff;font-weight:700;flex:none;vertical-align:middle}
+.sha{font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;font-size:12px;padding:0 8px;border-radius:4px;background:var(--inset);color:var(--fg-2);cursor:pointer;line-height:22px;white-space:nowrap;border:1px solid transparent}
+.sha:hover{border-color:var(--teal);color:var(--teal)}
 
-/* ---------- app shell ---------- */
-#app{flex:1;display:grid;grid-template-columns:238px minmax(0,1fr);min-height:calc(100vh - 42px)}
-.rail{background:var(--ink);color:#C9D1D0;display:flex;flex-direction:column}
-.rail .brand{padding:22px 22px 18px;border-bottom:1px solid #2A3534}
-.rail .brand b{display:block;color:#fff;font:700 26px/1 var(--head);letter-spacing:.08em}
-.rail .brand span{font-size:12px;opacity:.6}
-.nav{list-style:none;margin:10px 0;padding:0}
-.nav button{width:100%;background:none;border:0;border-left:3px solid transparent;text-align:left;padding:11px 19px;cursor:pointer;display:grid;grid-template-columns:30px 1fr;color:#C9D1D0;font:500 13px var(--head);letter-spacing:.12em;text-transform:uppercase}
-.nav button i{font:normal 11px var(--mono);color:#6E8583;padding-top:2px}
-.nav button:hover{background:#1C2726;color:#fff}
-.nav button.on{border-left-color:#5FB3AE;background:#1C2726;color:#fff}
-.nav button.on i{color:#5FB3AE}
-.rail .who{margin-top:auto;padding:16px 20px;border-top:1px solid #2A3534;font-size:13px}
-.rail .who b{color:#fff;display:block}
-.rail .who .role{font:600 10px var(--head);letter-spacing:.18em;text-transform:uppercase;color:#5FB3AE}
-.rail .who button{margin-top:10px;background:none;border:1px solid #435150;color:#C9D1D0;padding:5px 10px;font:600 10px var(--head);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
-.rail .who button:hover{border-color:#fff;color:#fff}
-main{padding:0 0 60px;min-width:0}
-.topbar{display:flex;align-items:center;gap:18px;padding:14px 34px;border-bottom:1px solid var(--rule);background:var(--paper-2);flex-wrap:wrap}
-.topbar h1{font:600 22px var(--head);letter-spacing:.06em;text-transform:uppercase;margin:0;flex:1;min-width:200px}
-.topbar h1 i{font:normal 13px var(--mono);color:var(--mute);margin-right:10px}
-.nodestrip{display:flex;align-items:center;gap:4px;font:11px var(--mono);color:var(--ink-2)}
-.nodestrip s{display:inline-block;width:12px;height:12px;background:var(--rule);text-decoration:none}
-.nodestrip s.up{background:var(--ok)}
-.nodestrip em{font-style:normal;margin-left:6px}
-.section{padding:26px 34px;max-width:1180px}
-.lede{max-width:760px;color:var(--ink-2);margin:0 0 22px}
+/* header: one solid sea-teal bar, tabs inside */
+.hdr{background:var(--hdr);color:var(--hdr-fg)}
+.hdr-in{display:flex;align-items:center;gap:16px;max-width:1280px;margin:0 auto;padding:0 20px;min-height:60px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;color:var(--hdr-fg);font-weight:700;letter-spacing:.14em;font-size:15px}
+.brand:hover{text-decoration:none}
+.brand svg{width:30px;height:30px;color:var(--hdr-fg)}
+.brand em{font-style:normal;font-weight:400;letter-spacing:.04em;color:var(--hdr-muted);border-left:1px solid rgba(255,255,255,.25);padding-left:10px}
+.tabs{display:flex;gap:2px;align-self:stretch;overflow-x:auto;scrollbar-width:none;flex:1}
+.tabs a{display:flex;align-items:center;color:var(--hdr-muted);font-weight:500;border-bottom:3px solid transparent;padding:0 2px;white-space:nowrap}
+.tabs a:hover{text-decoration:none;color:var(--hdr-fg)}
+.tabs a .t{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px}
+.tabs a:hover .t{background:rgba(255,255,255,.08)}
+.tabs a.on{color:var(--hdr-fg);border-bottom-color:var(--hdr-fg);font-weight:600}
+.tabs .counter{background:rgba(255,255,255,.16);color:var(--hdr-fg)}
+.hdr-tools{display:flex;align-items:center;gap:10px}
+.hbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;min-width:34px;padding:0 10px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.06);color:var(--hdr-fg);cursor:pointer;font-size:12px}
+.hbtn:hover{background:rgba(255,255,255,.14)}
+.nodepill i{width:7px;height:7px;border-radius:2px;background:rgba(255,255,255,.28);display:inline-block}
+.nodepill i.on{background:#6fd3a0}
+.menuwrap{position:relative}
+.menu{position:absolute;right:0;top:44px;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:var(--pop);width:260px;z-index:30;padding:6px 0}
+.menu .who{padding:10px 16px 12px;border-bottom:1px solid var(--border-2);display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.menu button{display:flex;width:100%;gap:10px;align-items:center;padding:8px 16px;background:none;border:0;text-align:left;cursor:pointer;color:var(--fg)}
+.menu button:hover{background:var(--hover)}
 
-/* panels: flat sheets with a folder-tab heading, no rounded corners */
-.sheet{background:var(--card);border:1px solid var(--rule);margin:34px 0 22px;position:relative}
-.sheet>.tab{position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--card);border:1px solid var(--rule);border-bottom:0;padding:5px 12px 3px;font:600 10px var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.sheet .inner{padding:20px 22px;overflow-x:auto}
-.sheet+.sheet{margin-top:44px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+/* title strip under header */
+.strip{background:var(--panel);border-bottom:1px solid var(--border)}
+.strip-in{display:flex;align-items:center;gap:16px;max-width:1280px;margin:0 auto;padding:12px 20px;flex-wrap:wrap}
+.crumb{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;flex:1;min-width:0}
+.crumb b{color:var(--fg);font-weight:600;font-size:15px}
+.crumb .sep{opacity:.6}
+.search{position:relative;width:300px}
+.search input{padding-left:34px;height:34px;background:var(--panel-2)}
+.search svg{position:absolute;left:11px;top:9px;color:var(--muted)}
 
-.drop{border:1.5px dashed var(--ink-2);background:var(--paper-2);padding:26px;text-align:center;cursor:pointer;transition:background .15s}
-.drop:hover,.drop.over{background:var(--teal-l);border-color:var(--teal)}
-.drop b{font:600 14px var(--head);letter-spacing:.1em;text-transform:uppercase;display:block}
-.drop .fname{font:13px var(--mono);color:var(--teal-d);margin-top:6px;word-break:break-all}
-.recips{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0;border:1px solid var(--rule);border-bottom:0;border-right:0}
-.recips label{margin:0;display:flex;gap:10px;align-items:center;padding:10px 12px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);font:14px var(--body);letter-spacing:0;text-transform:none;color:var(--ink);cursor:pointer;background:var(--card)}
-.recips label:has(input:checked){background:var(--teal-l)}
-.recips input{accent-color:var(--teal);width:16px;height:16px}
-.recips .id{margin-left:auto;font:12px var(--mono);color:var(--mute)}
+/* layout */
+.container{max-width:1280px;margin:0 auto;padding:28px 20px 72px;width:100%}
+.narrow{max-width:780px;margin:0 auto}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+.pagehead{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.pagehead h2{font-size:22px;font-weight:600;margin:0;flex:1;min-width:200px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;letter-spacing:-.01em}
+h1.title{font-size:26px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+h3.sec{font-size:13px;font-weight:700;margin:0 0 10px;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-2)}
+.sub{color:var(--muted);margin:0 0 24px;max-width:820px}
+hr.rule{border:0;border-top:1px solid var(--border);margin:24px 0}
 
-/* classification stamp */
-.stamp{display:inline-block;border:2px solid currentColor;padding:1px 7px;font:700 11px var(--head);letter-spacing:.16em;text-transform:uppercase;transform:rotate(-2deg);white-space:nowrap}
-.stamp.RESTRICTED{color:var(--warn)} .stamp.CONFIDENTIAL{color:var(--teal)} .stamp.SECRET{color:var(--claret)}
-.stamp.TOP{color:#fff;background:var(--claret);border-color:var(--claret)}
-.stamp.big{font-size:20px;padding:4px 14px;border-width:3px}
+/* cards */
+.box{background:var(--panel);border:1px solid var(--border-2);border-radius:10px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.box-head{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border-2);flex-wrap:wrap}
+.box-head b{font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-2)}
+.row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-top:1px solid var(--border-2);position:relative}
+.box-head+.row,.box>.row:first-child,#docRows>.row:first-child{border-top:0}
+.row:hover{background:var(--panel-2)}
+.row .main{flex:1;min-width:0}
+.row .tt{font-weight:600;font-size:15.5px;color:var(--fg);word-break:break-word}
+.row .tt:hover{color:var(--teal)}
+.row .meta{color:var(--muted);font-size:12.5px;margin-top:3px}
+.row .right{display:flex;align-items:center;gap:12px;flex:none}
+.row[data-cls]::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--border)}
+.row[data-cls="SECRET"]::before,.row[data-cls="TOP SECRET"]::before{background:var(--bad)}
+.row[data-cls="CONFIDENTIAL"]::before{background:var(--warn)}
+.row[data-cls="RESTRICTED"]::before{background:var(--teal)}
+.empty{padding:44px 24px;text-align:center}
+.empty svg.big{width:28px;height:28px;color:var(--teal);margin-bottom:10px}
+.empty h3{font-size:18px;font-weight:600;margin:0 0 6px}
+.empty p{margin:0 0 16px}
 
-table.list{width:100%;border-collapse:collapse;font-size:14px}
-table.list th{text-align:left;font:600 10px var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);border-bottom:2px solid var(--ink);padding:8px 10px}
-table.list td{border-bottom:1px solid var(--rule-2);padding:10px;vertical-align:top}
-table.list tr:hover td{background:var(--paper-2)}
-.idchip{font:12px var(--mono);background:var(--paper);border:1px solid var(--rule);padding:2px 6px;cursor:pointer;white-space:nowrap}
-.idchip:hover{border-color:var(--teal);color:var(--teal-d)}
-.empty{padding:28px;text-align:center;color:var(--mute);border:1px dashed var(--rule)}
+/* side panel = stacked cards */
+.side .sb{background:var(--panel);border:1px solid var(--border-2);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;margin-bottom:16px}
+.side h3{font-size:12px;font-weight:700;margin:0 0 12px;display:flex;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-2)}
+.side p{color:var(--fg-2)}
+.side .line{display:flex;align-items:flex-start;gap:10px;margin:9px 0;color:var(--fg-2)}
+.side .line>svg.ic{margin-top:3px}
+.side .line .label{margin-left:auto}
+.side .line svg.ic{color:var(--teal)}
+.side .line b{color:var(--fg);font-weight:600}
 
-/* sealed result + share split */
-.sealed{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
-.split{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
-.split div{border:1px solid var(--rule);padding:8px;font:11px var(--mono);text-align:center;background:var(--paper-2)}
-.split div b{display:block;font:600 13px var(--head);letter-spacing:.08em}
+.kv{display:grid;grid-template-columns:180px minmax(0,1fr)}
+.kv>div{padding:10px 18px;border-top:1px solid var(--border-2);word-break:break-word}
+.kv>div:nth-child(-n+2){border-top:0}
+.kv>div:nth-child(odd){color:var(--muted);font-weight:600;font-size:12.5px}
+table.t{width:100%;border-collapse:collapse}
+table.t th{text-align:left;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 18px;border-bottom:1px solid var(--border-2);background:var(--panel-2)}
+table.t td{padding:11px 18px;border-top:1px solid var(--border-2);vertical-align:top}
+table.t tbody tr:first-child td{border-top:0}
+table.t tbody tr:hover td{background:var(--panel-2)}
+.scroll{overflow-x:auto}
 
-/* nodes */
-.nodes{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.node{border:1px solid var(--rule);background:var(--card);padding:14px 12px;position:relative;min-height:128px}
-.node .nm{font:700 22px var(--head);letter-spacing:.06em}
-.node .st{font:600 10px var(--head);letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
-.node .fp{font:10.5px var(--mono);color:var(--mute);margin-top:10px;word-break:break-all}
-.node.up{border-top:4px solid var(--ok)} .node.up .st{color:var(--ok)}
-.node.down{border-top:4px solid var(--rule);background:var(--paper-2)} .node.down .st{color:var(--mute)} .node.down .nm{color:var(--mute)}
-.node.signed{border-top-color:var(--ok);background:var(--ok-l)}
-.node.rejected{border-top:4px solid var(--claret);background:var(--claret-l)}
-.node.working{border-top:4px solid var(--warn)}
-.node.working .st{color:var(--warn)}
-.node .act{margin-top:10px}
-#voteNodes .node{min-height:0;padding:10px 12px}
-#voteNodes .node .nm{font-size:18px}
-.quorum{display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap}
-.qbar{display:grid;grid-template-columns:repeat(5,34px);gap:3px;position:relative}
-.qbar span{height:14px;background:var(--rule-2)} .qbar span.on{background:var(--ok)}
-.qbar:after{content:"";position:absolute;left:calc(4*37px - 3px);top:-6px;bottom:-6px;border-left:2px dashed var(--ink)}
-.verdict{font:600 13px var(--head);letter-spacing:.14em;text-transform:uppercase;padding:4px 10px}
-.verdict.go{background:var(--ok);color:#fff} .verdict.stop{background:var(--claret);color:#fff}
+/* notices: left rule instead of full border */
+.flash{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;background:var(--info-soft);border-left:4px solid var(--info);border-radius:8px;margin-bottom:18px;color:var(--fg)}
+.flash>svg{color:var(--info);margin-top:2px}
+.flash.success{background:var(--ok-soft);border-left-color:var(--ok)} .flash.success>svg{color:var(--ok)}
+.flash.error{background:var(--bad-soft);border-left-color:var(--bad)} .flash.error>svg{color:var(--bad)}
+.flash.warn{background:var(--warn-soft);border-left-color:var(--warn)} .flash.warn>svg{color:var(--warn)}
+.flash .x{margin-left:auto;background:none;border:0;cursor:pointer;color:var(--muted);padding:0}
+.flash b{font-weight:700}
 
-/* reader */
-.pipeline{list-style:none;margin:16px 0 0;padding:0;border-left:2px solid var(--rule)}
-.pipeline li{padding:6px 0 6px 18px;position:relative;font-size:14px;color:var(--mute)}
-.pipeline li:before{content:"";position:absolute;left:-8px;top:10px;width:12px;height:12px;background:var(--paper);border:2px solid var(--rule)}
-.pipeline li.done{color:var(--ink)} .pipeline li.done:before{background:var(--ok);border-color:var(--ok)}
-.pipeline li.fail{color:var(--claret)} .pipeline li.fail:before{background:var(--claret);border-color:var(--claret)}
-.pipeline li .mono{color:var(--ink-2)}
-.docframe{border:1px solid var(--ink);background:#fff;min-height:200px;display:flex;justify-content:center;align-items:flex-start;position:relative}
-.docframe img{max-width:100%;display:block}
-.docframe iframe{width:100%;height:78vh;border:0}
-.copyline{display:flex;justify-content:space-between;gap:10px;background:var(--ink);color:#fff;padding:8px 14px;font:12px var(--mono);flex-wrap:wrap}
-.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 14px;font-size:13.5px}
-.kv dt{font:600 10px/2 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
-.kv dd{margin:0;word-break:break-all}
+.drop{border:2px dashed var(--teal-line);border-radius:10px;background:var(--panel);padding:30px 16px;text-align:center;cursor:pointer;color:var(--fg-2)}
+.drop>svg.ic{width:22px;height:22px;color:var(--teal);margin-bottom:6px}
+.drop:hover,.drop.over,.drop:focus{border-color:var(--teal);background:var(--teal-soft);outline:none}
+.drop .f{margin-top:10px;font-weight:600;color:var(--teal);word-break:break-all}
 
-/* ledger chain */
-.chain{position:relative}
-.blk{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:0;border:1px solid var(--rule);background:var(--card);position:relative;margin-bottom:26px}
-.blk:not(:last-child):after{content:"";position:absolute;left:38px;bottom:-27px;height:26px;border-left:2px solid var(--ink)}
-.blk .ix{background:var(--ink);color:#fff;font:700 24px var(--head);display:flex;flex-direction:column;align-items:center;justify-content:center;letter-spacing:.04em}
-.blk .ix small{font:600 9px var(--head);letter-spacing:.2em;opacity:.6}
-.blk .body{padding:12px 16px;min-width:0}
-.blk .body .t{font:600 16px var(--head);letter-spacing:.04em}
-.blk .hashes{font:11.5px var(--mono);color:var(--ink-2);margin-top:6px;display:grid;grid-template-columns:86px minmax(0,1fr);gap:1px 8px}
-.blk .hashes span{color:var(--mute)}
-.blk .hashes code{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.blk .side{padding:12px 16px;border-left:1px dashed var(--rule);display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:170px}
-.pips{display:flex;gap:3px} .pips s{width:20px;height:8px;background:var(--rule-2)} .pips s.on{background:var(--ok)}
-.blk.bad{border-color:var(--claret);background:var(--claret-l)}
-.blk.bad .ix{background:var(--claret)}
-.vstamp{font:700 11px var(--head);letter-spacing:.16em;padding:2px 8px;border:2px solid;text-transform:uppercase;align-self:flex-start;transform:rotate(-3deg)}
-.vstamp.ok{color:var(--ok)} .vstamp.bad{color:var(--claret)}
-.problems{margin:8px 0 0;padding-left:18px;color:var(--claret);font-size:13px}
-.banner-state{padding:12px 16px;font:600 14px var(--head);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;display:flex;gap:10px;align-items:center}
-.banner-state.ok{background:var(--ok-l);color:var(--ok);border-left:5px solid var(--ok)}
-.banner-state.bad{background:var(--claret-l);color:var(--claret);border-left:5px solid var(--claret)}
+.pick{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.pick label{display:flex;align-items:center;gap:12px;padding:11px 16px;border-top:1px solid var(--border-2);cursor:pointer;margin:0;font-weight:400}
+.pick label:first-child{border-top:0}
+.pick label:hover{background:var(--panel-2)}
+.pick label:has(input:checked){background:var(--teal-soft)}
+.pick input{width:17px;height:17px;accent-color:var(--teal);flex:none}
+.pick .nm{flex:1;min-width:0}
 
-/* trace result */
-.caught{display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--claret);background:#fff}
-.caught .who{padding:26px;background:var(--claret);color:#fff}
-.caught .who .lbl{font:600 11px var(--head);letter-spacing:.24em;text-transform:uppercase;opacity:.8}
-.caught .who .nm{font:700 38px/1.05 var(--head);letter-spacing:.02em;margin:10px 0 4px}
-.caught .who .num{font:22px var(--mono);opacity:.9}
-.caught .ev{padding:22px 26px}
-.meter{height:10px;background:var(--rule-2);margin:6px 0 2px}
-.meter span{display:block;height:100%;background:var(--claret)}
-.clean{border:2px solid var(--ok);background:var(--ok-l);padding:22px;color:var(--ok)}
-.clean b{font:700 22px var(--head);letter-spacing:.06em;text-transform:uppercase;display:block}
+.check{display:flex;gap:12px;align-items:flex-start;padding:11px 18px;border-top:1px solid var(--border-2)}
+.box-head+.check{border-top:0}
+.check .st{width:17px;height:17px;margin-top:1px}
+.check .st.ok{color:var(--ok)} .check .st.bad{color:var(--bad)} .check .st.skip{color:var(--muted)}
+.check .d{flex:1;min-width:0} .check .d .mono{color:var(--muted);word-break:break-all}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:sp .8s linear infinite;flex:none}
+.btn .spin{width:14px;height:14px;border-color:rgba(255,255,255,.35);border-top-color:currentColor}
+.btn:not(.primary) .spin{border-color:var(--border);border-top-color:var(--teal)}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.nodes5{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 12px 47px}
 
-/* audit */
-.tag{font:600 10px var(--head);letter-spacing:.14em;padding:2px 7px;text-transform:uppercase;white-space:nowrap;border:1px solid var(--rule);color:var(--ink-2)}
-.tag.DENIED,.tag.TAMPER,.tag.LOGIN_FAILED{background:var(--claret);color:#fff;border-color:var(--claret)}
-.tag.OPEN{background:var(--ok);color:#fff;border-color:var(--ok)}
-.tag.SHARE{background:var(--teal);color:#fff;border-color:var(--teal)}
-.tag.TRACE{background:var(--ink);color:#fff;border-color:var(--ink)}
-.tag.RESTORE,.tag.RESET,.tag.NODE{background:var(--warn-l);color:var(--warn);border-color:var(--warn)}
+.viewer .box-head{justify-content:space-between}
+.viewer .box-head b.mono{text-transform:none;letter-spacing:0;color:var(--fg)}
+.viewer img{display:block;max-width:100%;margin:0 auto;box-shadow:var(--shadow)}
+.viewer iframe{display:block;width:100%;height:80vh;border:0;background:#fff}
+.viewer .imgwrap{padding:18px;background:var(--inset)}
 
-#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;max-width:min(640px,92vw);font-size:14px;z-index:50;border-left:5px solid var(--teal);box-shadow:0 6px 24px rgba(0,0,0,.25)}
-#toast.bad{border-left-color:#E5718F}
-#offline{background:var(--warn);color:#fff;text-align:center;padding:8px;font-size:14px}
+.tl-date{display:flex;align-items:center;gap:8px;color:var(--muted);margin:20px 0 10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.tl-date svg.ic{color:var(--teal)}
+.bad-row{background:var(--bad-soft)!important}
+.bad-row::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--bad)}
+.problems{margin:6px 0 0;padding-left:18px;color:var(--bad);font-size:12.5px}
 
-@media (max-width:900px){
-  #login{grid-template-columns:1fr} .intro{padding:34px 22px} .wordmark{font-size:46px} .tagline{font-size:22px}
-  .loginpane{padding:28px 22px}
-  #app{grid-template-columns:minmax(0,1fr)} .rail{flex-direction:row;flex-wrap:wrap;align-items:center;min-width:0}
-  .banner{letter-spacing:.14em;font-size:10px;padding:5px 8px}
-  .rail .brand{border:0;padding:12px 16px} .nav{display:flex;overflow-x:auto;margin:0;width:100%;min-width:0;order:3}
-  .nav button{white-space:nowrap;border-left:0;border-bottom:3px solid transparent;grid-template-columns:auto auto;gap:6px;padding:10px 14px}
-  .nav button.on{border-bottom-color:#5FB3AE}
-  .rail .who{margin:0 0 0 auto;border:0;padding:10px 16px}
-  .section,.topbar{padding-left:16px;padding-right:16px}
-  .grid2,.caught,.sealed{grid-template-columns:1fr}
-  .nodes,.split{grid-template-columns:repeat(3,1fr)}
-  .blk{grid-template-columns:54px minmax(0,1fr)} .blk .side{grid-column:1/-1;border-left:0;border-top:1px dashed var(--rule)}
-  .kv{grid-template-columns:1fr}
+.result{display:flex;gap:18px;align-items:center;padding:20px 18px;border-bottom:1px solid var(--border-2);background:var(--panel-2)}
+.result .nm{font-size:22px;font-weight:700}
+.meter{height:8px;border-radius:2px;background:var(--inset);overflow:hidden;width:180px;display:inline-block;vertical-align:middle;margin-right:10px}
+.meter span{display:block;height:100%;background:var(--teal)}
+
+.dz{background:var(--panel);border:1px solid var(--bad-line);border-radius:10px;overflow:hidden}
+.dz .row:hover{background:transparent}
+
+/* sign-in: teal band + floating card */
+#login{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;padding:0 16px 40px}
+#login::before{content:"";position:absolute;left:0;right:0;top:0;height:280px;background:var(--hdr);z-index:0}
+#login>*{position:relative;z-index:1}
+.lg-top{display:flex;flex-direction:column;align-items:center;padding:48px 0 28px;color:var(--hdr-fg);text-align:center}
+.lg-top svg{width:52px;height:52px;color:var(--hdr-fg)}
+.lg-top .nm{font-weight:700;letter-spacing:.3em;font-size:22px;margin-top:14px}
+.lg-top .tg{color:var(--hdr-muted);font-size:13px;margin-top:4px;letter-spacing:.02em}
+.lg-card{width:100%;max-width:400px;background:var(--panel);border-radius:12px;box-shadow:var(--pop);padding:26px 26px 22px}
+.lg-card h1{font-size:20px;font-weight:600;margin:0 0 18px}
+.lg-note{width:100%;max-width:400px;margin:18px 0 0}
+.lg-note .row{cursor:pointer;padding:9px 18px;flex-wrap:wrap;gap:2px 8px}
+.lg-note .row .main{font-size:13px}
+.lg-err{margin-bottom:16px}
+.lg-foot{margin-top:22px;color:var(--muted);font-size:12px;text-align:center;max-width:440px}
+
+#toast{position:fixed;right:20px;bottom:20px;z-index:60;max-width:min(460px,calc(100vw - 40px));background:var(--panel);color:var(--fg);padding:12px 16px;border-radius:8px;box-shadow:var(--pop);display:flex;gap:10px;align-items:center;border-left:4px solid var(--ok)}
+#toast>svg{color:var(--ok)}
+#toast.bad{border-left-color:var(--bad)} #toast.bad>svg{color:var(--bad)}
+#offline{background:var(--warn-soft);border-bottom:1px solid var(--warn-line);color:var(--fg);padding:8px 16px;text-align:center}
+footer.ft{border-top:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;padding:20px 16px;text-align:center;margin-top:auto}
+
+@media (max-width:1360px){ .brand em{display:none} }
+@media (max-width:1011px){ .layout{grid-template-columns:1fr} }
+@media (max-width:1120px){ .tabs{order:3;flex:0 0 100%;margin:0 -20px;padding:0 12px;min-height:44px} .hdr-in{gap:12px;padding-top:8px} .hdr-tools{margin-left:auto} .brand em{display:none} }
+@media (max-width:640px){
+  .search{width:100%} .nodepill em{display:none}
+  .row{flex-wrap:wrap} .row .right{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .kv{grid-template-columns:1fr} .kv>div:nth-child(odd){padding-bottom:0} .kv>div:nth-child(even){border-top:0}
+  .container{padding-top:18px} .nodes5{padding-left:18px}
 }
 </style>
 </head>
 <body>
-<div class="banner">Restricted &nbsp;//&nbsp; NISHAAN demonstration system &nbsp;//&nbsp; sample data only</div>
-<div id="offline" class="hidden">Can't reach the NISHAAN server. Make sure the black terminal window is still running, then press F5.</div>
+<div id="offline" class="hidden">Cannot reach the NISHAAN server. Make sure the terminal window running <span class="mono">bash start.sh</span> is still open, then reload this page.</div>
 
-<!-- ================================================================= LOGIN -->
+<!-- ================================================================ SIGN IN -->
 <section id="login">
-  <div class="intro">
-    <h1 class="wordmark">NISHAAN<small>निशान &nbsp;·&nbsp; the mark</small></h1>
-    <p class="tagline">Every copy carries <b>its reader's mark</b>. Every opening is <b>signed, voted on and chained</b>.</p>
-    <ol class="steps">
-      <li><b>01</b><span>A document is encrypted once and its key is split across five ledger nodes, so no single server holds it.</span></li>
-      <li><b>02</b><span>An officer signs a post-quantum receipt to open it. Four of five nodes must verify and co-sign.</span></li>
-      <li><b>03</b><span>The copy they receive carries an invisible mark unique to them, in every page.</span></li>
-      <li><b>04</b><span>If it leaks, the mark names the officer, and the ledger shows when they opened it.</span></li>
-    </ol>
-    <div class="foot">ML-KEM-768 · ML-DSA-65 · AES-256-GCM · Shamir 3-of-5 · SHA3-256</div>
+  <div class="lg-top"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#logo"/></svg><div class="nm">NISHAAN</div><div class="tg">Secure document distribution and leak attribution</div></div>
+  <div class="lg-card">
+    <h1>Sign in</h1>
+    <div id="loginErr" class="flash error lg-err hidden"><svg class="ic"><use href="#i-x-circle"/></svg><div id="loginErrT"></div></div>
+    <div class="field"><label for="lu">Username</label><input class="form" id="lu" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+    <div class="field"><label for="lp">Password</label><input class="form" id="lp" type="password" autocomplete="current-password"></div>
+    <button class="btn primary block" id="loginBtn" onclick="doLogin(this)">Sign in</button>
   </div>
-  <div class="loginpane">
-    <h2>Sign in</h2>
-    <p class="mute small" style="margin:0">Use one of the demo accounts below.</p>
-    <label for="lu">Username</label>
-    <input id="lu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false">
-    <label for="lp">Password</label>
-    <input id="lp" type="password" autocomplete="current-password">
-    <div style="margin-top:18px"><button class="btn teal" id="loginBtn" onclick="doLogin(this)">Sign in</button></div>
-    <div class="err" id="loginErr"></div>
-    <table class="acct" id="acctTable">
-      <caption>Demo accounts &mdash; click one to fill it in</caption>
-      <tr data-u="admin" data-p="admin123"><td><b>admin</b> / admin123</td><td>Distribution Officer</td><td>shares &amp; traces</td></tr>
-      <tr data-u="rao" data-p="rao123"><td><b>rao</b> / rao123</td><td>Lt. Cdr. Rao</td><td>#07</td></tr>
-      <tr data-u="iyer" data-p="iyer123"><td><b>iyer</b> / iyer123</td><td>Cdr. Iyer</td><td>#11</td></tr>
-      <tr data-u="sharma" data-p="sharma123"><td><b>sharma</b> / sharma123</td><td>Lt. Sharma</td><td>#14</td></tr>
-      <tr data-u="fernandes" data-p="fernandes123"><td><b>fernandes</b> / fernandes123</td><td>Cdr. Fernandes</td><td>#19</td></tr>
-      <tr data-u="bose" data-p="bose123"><td><b>bose</b> / bose123</td><td>Lt. Cdr. Bose</td><td>#23</td></tr>
-    </table>
-  </div>
+  <div class="lg-note box" id="acctList"><div class="box-head"><b>Demonstration accounts</b><span class="muted small">Select one to fill in</span></div></div>
+  <div style="margin-top:16px"><button class="btn sm" onclick="toggleTheme()"><svg class="ic"><use href="#i-theme"/></svg><span class="themeLbl">Dark theme</span></button></div>
+  <p class="lg-foot">NISHAAN · Cryptographic attribution and immutable decryption provenance for classified document distribution. Demonstration system with sample data only.</p>
 </section>
 
-<!-- ================================================================= APP -->
-<section id="app" class="hidden">
-  <aside class="rail">
-    <div class="brand"><b>NISHAAN</b><span>secure distribution console</span></div>
-    <ul class="nav" id="nav"></ul>
-    <div class="who">
-      <span class="role" id="whoRole"></span>
-      <b id="whoName"></b>
-      <span class="mono" id="whoId"></span><br>
-      <button onclick="logout()">Sign out</button>
-    </div>
-  </aside>
-  <main>
-    <div class="topbar">
-      <h1 id="pageTitle"></h1>
-      <div class="nodestrip" id="nodeStrip" title="Ledger nodes online"></div>
-    </div>
-
-    <!-- ---------- DISTRIBUTE (admin) ---------- -->
-    <div class="section view" id="v-distribute">
-      <p class="lede">Choose a PDF or an image, give it a classification and pick who may open it. It is encrypted once. The key is split into five shares for the five ledger nodes, and the key itself is thrown away.</p>
-      <div class="sheet"><span class="tab">New distribution</span><div class="inner">
-        <div class="grid2">
-          <div>
-            <div class="drop" id="shareDrop" onclick="document.getElementById('shareFile').click()">
-              <b>Drop a PDF or image here</b><span class="mute small">or click to choose &middot; PDF, PNG, JPG &middot; up to 30 MB</span>
-              <div class="fname" id="shareName"></div>
-            </div>
-            <input type="file" id="shareFile" class="hidden" accept="application/pdf,image/png,image/jpeg">
-            <label for="shareTitle">Title</label>
-            <input id="shareTitle" type="text" placeholder="e.g. Fleet movement order 14/26">
-            <label for="shareClass">Classification</label>
-            <select id="shareClass">
-              <option>RESTRICTED</option><option>CONFIDENTIAL</option><option selected>SECRET</option><option>TOP SECRET</option>
-            </select>
-          </div>
-          <div>
-            <label style="margin-top:0">Recipients &mdash; only these officers can open it</label>
-            <div class="recips" id="recipList"></div>
-            <div class="row small" style="margin-top:8px"><a href="#" onclick="pickAll(true);return false">select all</a><a href="#" onclick="pickAll(false);return false">clear</a></div>
-            <div style="margin-top:22px"><button class="btn teal" onclick="doShare(this)">Encrypt &amp; distribute</button></div>
+<!-- ================================================================ APP -->
+<div id="app" class="hidden" style="flex-direction:column;flex:1">
+  <header class="hdr"><div class="hdr-in">
+      <a class="brand" href="#/documents" aria-label="NISHAAN home"><svg viewBox="0 0 48 48"><use href="#logo"/></svg>NISHAAN<em>Command</em></a>
+      <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+      <div class="hdr-tools">
+        <button class="hbtn nodepill" id="nodePill" onclick="go(ME.role==='admin'?'#/nodes':'#/settings')" title="Ledger nodes online"></button>
+        <button class="hbtn" onclick="toggleTheme()" title="Switch theme" aria-label="Switch between light and dark theme"><svg class="ic"><use href="#i-theme"/></svg></button>
+        <div class="menuwrap">
+          <button style="border:0;background:none;padding:0;cursor:pointer;display:flex" onclick="toggleMenu(event)" aria-label="Account menu" id="avatarBtn"></button>
+          <div class="menu hidden" id="menu">
+            <div class="who" id="menuWho"></div>
+            <button onclick="toggleTheme()"><svg class="ic"><use href="#i-theme"/></svg><span class="themeLbl">Dark theme</span></button>
+            <button onclick="go('#/settings')"><svg class="ic"><use href="#i-key"/></svg><span id="menuKeys">Keys</span></button>
+            <button onclick="logout()"><svg class="ic"><use href="#i-signout"/></svg>Sign out</button>
           </div>
         </div>
-      </div></div>
-      <div id="shareResult"></div>
-    </div>
-
-    <!-- ---------- REGISTRY (admin) / INBOX (officer) ---------- -->
-    <div class="section view" id="v-docs">
-      <p class="lede" id="docsLede"></p>
-      <div class="sheet"><span class="tab" id="docsTab">Documents</span><div class="inner" id="docsBody"></div></div>
-    </div>
-
-    <!-- ---------- READER (officer) ---------- -->
-    <div class="section view" id="v-reader">
-      <p class="lede">Opening a document runs the full NISHAAN protocol. You sign a receipt, the ledger nodes check it and vote, three nodes release their key shares, and the rebuilt key is sent to you wrapped under your own ML-KEM key. You then get a copy carrying your personal mark.</p>
-      <div class="sheet"><span class="tab">Request access</span><div class="inner">
-        <div class="row">
-          <div style="flex:1;min-width:220px"><label for="openId" style="margin-top:0">Document ID</label><input id="openId" type="text" class="mono" placeholder="12-character id from your inbox" spellcheck="false"></div>
-          <div style="align-self:flex-end"><button class="btn teal" id="openBtn" onclick="doOpen(this)">Sign &amp; request unlock</button></div>
-        </div>
-        <div class="nodes" id="voteNodes" style="margin-top:20px"></div>
-        <div class="quorum" id="voteQuorum"></div>
-        <ol class="pipeline" id="pipeline"></ol>
-      </div></div>
-      <div id="readerOut"></div>
-    </div>
-
-    <!-- ---------- LEDGER ---------- -->
-    <div class="section view" id="v-ledger">
-      <p class="lede">Every successful opening becomes a block: the officer's signed receipt, sealed with a SHA3-256 hash, linked to the block before it, and co-signed by at least four nodes. <b>Verify</b> re-checks every hash, link and signature from scratch.</p>
-      <div class="row" style="margin-bottom:18px">
-        <button class="btn teal" onclick="doVerify(this)">Verify entire chain</button>
-        <button class="btn ghost" onclick="loadLedger()">Refresh</button>
       </div>
-      <div class="sheet hidden" id="tamperSheet"><span class="tab">Demo &middot; insider tampering</span><div class="inner">
-        <p class="small mute" style="margin-top:0">Pretend to be a corrupt insider with direct database access, and rewrite a past record to blame someone else. Then press <b>Verify</b>.</p>
-        <div class="row">
-          <div><label style="margin-top:0">Block #</label><select id="tBlock" style="width:110px"></select></div>
-          <div><label style="margin-top:0">Blame</label><select id="tWho" style="width:190px"></select></div>
-          <div><label style="margin-top:0">Method</label><select id="tMode" style="width:260px"><option value="edit">Edit the record</option><option value="rehash">Edit + recompute its hash</option></select></div>
-          <div style="align-self:flex-end"><button class="btn claret" onclick="doTamper(this)">Tamper</button></div>
-          <div style="align-self:flex-end"><button class="btn ghost" onclick="doRestore(this)">Undo all tampering</button></div>
-        </div>
-      </div></div>
-      <div id="verifyBanner"></div>
-      <div class="chain" id="chain"></div>
-    </div>
+  </div></header>
+  <div class="strip"><div class="strip-in">
+      <div class="crumb"><span>NISHAAN</span><span class="sep">/</span><b id="crumb">Documents</b></div>
+      <div class="search" id="searchBox"><svg class="ic"><use href="#i-search"/></svg><input class="form" id="q" placeholder="Search documents" oninput="onSearch()" aria-label="Search documents"></div>
+  </div></div>
+  <main class="container" id="view"></main>
+  <footer class="ft">NISHAAN Command &middot; SIH 2026 &middot; PS 26237 &middot; Team 0dgree &middot; ML-KEM-768 · ML-DSA-65 · AES-256-GCM · Shamir 3-of-5 · SHA3-256</footer>
+</div>
+<div id="toast" class="hidden" role="status"></div>
 
-    <!-- ---------- TRACE (admin) ---------- -->
-    <div class="section view" id="v-trace">
-      <p class="lede">Found a copy somewhere it shouldn't be, such as a forwarded PDF, a screenshot or a re-saved JPEG? Pick the original document and drop the leaked file in. NISHAAN reads the hidden mark and matches it against the ledger.</p>
-      <div class="sheet"><span class="tab">Leak investigation</span><div class="inner">
-        <div class="grid2">
-          <div>
-            <label for="traceDoc" style="margin-top:0">Original document</label>
-            <select id="traceDoc"></select>
-            <div style="margin-top:22px"><button class="btn claret" onclick="doTrace(this)">Identify the source</button></div>
-          </div>
-          <div>
-            <div class="drop" id="traceDrop" onclick="document.getElementById('traceFile').click()">
-              <b>Drop the leaked copy here</b><span class="mute small">PDF, PNG or JPG &middot; resized or re-saved is fine</span>
-              <div class="fname" id="traceName"></div>
-            </div>
-            <input type="file" id="traceFile" class="hidden" accept="application/pdf,image/png,image/jpeg">
-          </div>
-        </div>
-      </div></div>
-      <div id="traceOut"></div>
-    </div>
-
-    <!-- ---------- NODES (admin) ---------- -->
-    <div class="section view" id="v-nodes">
-      <p class="lede">Five nodes each hold one key share and one ML-DSA-65 signing key. Opening a document needs <b>4 of 5</b> to verify and co-sign. Take nodes offline to see the system refuse to unlock.</p>
-      <div class="nodes" id="nodeGrid"></div>
-      <div class="quorum" id="nodeQuorum"></div>
-    </div>
-
-    <!-- ---------- AUDIT (admin) ---------- -->
-    <div class="section view" id="v-audit">
-      <p class="lede">Everything is logged, including every refused attempt: wrong recipients, failed quorums, failed logins and tampering.</p>
-      <div class="row" style="margin-bottom:14px">
-        <button class="btn ghost sm" onclick="loadAudit()">Refresh</button>
-        <label style="margin:0;display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font:14px var(--body)"><input type="checkbox" id="onlyBad" onchange="loadAudit()" style="accent-color:var(--claret)"> Show only refusals &amp; alerts</label>
-      </div>
-      <div class="sheet"><span class="tab">Audit log</span><div class="inner" id="auditBody"></div></div>
-    </div>
-
-    <!-- ---------- SYSTEM / KEYS ---------- -->
-    <div class="section view" id="v-system">
-      <div class="sheet"><span class="tab">Cryptography in use</span><div class="inner"><dl class="kv" id="algos"></dl></div></div>
-      <div class="sheet"><span class="tab">Public-key fingerprints</span><div class="inner" id="keysBody"></div></div>
-      <div class="sheet hidden" id="resetSheet"><span class="tab">Demo reset</span><div class="inner">
-        <p class="small" style="margin-top:0">This wipes every document, ledger block and audit entry, and generates fresh keys. Use it before a rehearsal or the final demo.</p>
-        <button class="btn claret" id="resetBtn" onclick="doReset(this)">Reset demo data</button>
-      </div></div>
-    </div>
-  </main>
-</section>
-<div class="banner">Restricted &nbsp;//&nbsp; handle via approved channels only</div>
-<div id="toast" class="hidden"></div>
+<!-- ================================================================ ICONS (original line icons) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 48 48"><path d="M24 3 42 9v14c0 11-7.6 19-18 22C13.6 42 6 34 6 23V9z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M17 31V17l14 14V17" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 16 16"><path d="M4 1.5h5l3.5 3.5v9.5h-8.5z"/><path d="M9 1.5V5h3.5"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 16 16"><path d="M8 11V2.5M4.5 6 8 2.5 11.5 6"/><path d="M2.5 11v2.5h11V11"/></symbol>
+  <symbol id="i-chain" viewBox="0 0 16 16"><path d="M6.5 9.5 9.5 6.5"/><path d="M7 4.5 8.5 3a2.8 2.8 0 0 1 4 4L11 8.5"/><path d="M9 11.5 7.5 13a2.8 2.8 0 0 1-4-4L5 7.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></symbol>
+  <symbol id="i-server" viewBox="0 0 16 16"><rect x="2" y="2.5" width="12" height="4.5" rx="1"/><rect x="2" y="9" width="12" height="4.5" rx="1"/><path d="M4.5 4.75h.01M4.5 11.25h.01"/></symbol>
+  <symbol id="i-log" viewBox="0 0 16 16"><path d="M5.5 3.5h8M5.5 8h8M5.5 12.5h8M2.5 3.5h.01M2.5 8h.01M2.5 12.5h.01"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 16 16"><circle cx="5.5" cy="10.5" r="3"/><path d="m7.6 8.4 6-6M11.5 4.5l1.5 1.5M10 6l1.2 1.2"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></symbol>
+  <symbol id="i-unlock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.8-1"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.5 3 3 7-7"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="m5.2 8.2 2 2 3.8-4"/></symbol>
+  <symbol id="i-x-circle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="m5.7 5.7 4.6 4.6M10.3 5.7l-4.6 4.6"/></symbol>
+  <symbol id="i-minus-circle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M5.3 8h5.4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.2V11M8 5h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2 14.5 13.5h-13z"/><path d="M8 6.5v3M8 11.5h.01"/></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-download" viewBox="0 0 16 16"><path d="M8 2.5V11M4.5 7.5 8 11l3.5-3.5"/><path d="M2.5 11v2.5h11V11"/></symbol>
+  <symbol id="i-people" viewBox="0 0 16 16"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/><path d="M10.5 3.2a2.5 2.5 0 0 1 0 4.6M12 9.8c1.6.5 2.5 1.8 2.5 3.7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 16 16"><path d="M8 1.5 13.5 3.5V8c0 3-2.4 5.3-5.5 6.5C4.9 13.3 2.5 11 2.5 8V3.5z"/><path d="m5.6 8 1.7 1.7 3.2-3.4"/></symbol>
+  <symbol id="i-signout" viewBox="0 0 16 16"><path d="M6 2.5H3v11h3M10.5 5 13.5 8l-3 3M13.5 8H6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1"/><path d="M10.5 5.5v-3h-8v8h3"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 16 16"><path d="M13 8H3M7 4 3 8l4 4"/></symbol>
+</svg>
 
 <script>
 "use strict";
 const API = location.protocol.startsWith("http") ? location.origin : "http://localhost:8000";
-let TOKEN = null, ME = null, USERS = [], DOCS = [], CUR = null, lastObjUrl = null;
-
-const NAV = {
-  admin: [["distribute","Distribute"],["docs","Registry"],["ledger","Ledger"],["trace","Trace a leak"],["nodes","Nodes"],["audit","Audit log"],["system","System"]],
-  officer: [["docs","Inbox"],["reader","Open document"],["ledger","Ledger"],["system","Keys"]],
+let TOKEN=null, ME=null, USERS=[], DOCS=[], NODES=null, OBJ_URL=null, FLASH=null;
+const TABS = {
+  admin:   [["documents","Documents","i-doc"],["share","Share","i-upload"],["ledger","Ledger","i-chain"],["trace","Trace","i-search"],["nodes","Nodes","i-server"],["people","People","i-people"],["audit","Audit","i-log"]],
+  officer: [["documents","My documents","i-doc"],["ledger","Ledger","i-chain"],["settings","Keys","i-key"]],
 };
-const TITLES = {distribute:"Distribute a document",docs:"",reader:"Open a document",ledger:"Ledger",trace:"Trace a leak",nodes:"Ledger nodes",audit:"Audit log",system:"System"};
+const DEMO = [["admin","admin123","Administrator","Distribution Officer"]].concat(Array.from({length:10},(_,i)=>[`officer${i+1}`,`officer${i+1}123`,`Officer ${i+1}`,`#${String(i+1).padStart(2,"0")}`]));
 
 /* ---------------------------------------------------------------- helpers */
 const $ = id => document.getElementById(id);
-function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function when(t){ if(!t) return ""; const d=new Date(t*1000); return d.toLocaleString(undefined,{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
-function short(h,n=10){ return h ? esc(h.slice(0,n))+"…" : ""; }
-function nameOf(u){ const x=USERS.find(v=>v.username===u); return x?x.name:u; }
-function idOf(u){ const x=USERS.find(v=>v.username===u); return x?x.officer_id:null; }
+const V = () => $("view");
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function ic(id,cls=""){ return `<svg class="ic ${cls}"><use href="#${id}"/></svg>`; }
 function pad(n){ return String(n).padStart(2,"0"); }
-function stamp(c){ return `<span class="stamp ${esc((c||"").split(" ")[0])}">${esc(c)}</span>`; }
-let toastTimer;
-function toast(msg,bad){ const t=$("toast"); t.textContent=msg; t.className=bad?"bad":""; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.add("hidden"),bad?7000:3500); }
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-function copy(text){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(()=>toast("Copied "+text)).catch(()=>{ prompt("Copy this:",text); }); }
+function cap(s){ s=String(s||""); return s.charAt(0).toUpperCase()+s.slice(1); }
+function fullDate(t){ return new Date(t*1000).toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+function dayOf(t){ return new Date(t*1000).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"}); }
+function ago(t){
+  const s=Math.max(1,Math.round(Date.now()/1000-t));
+  if(s<60) return "just now"; const m=Math.round(s/60); if(m<60) return m+(m===1?" minute ago":" minutes ago");
+  const h=Math.round(m/60); if(h<24) return h+(h===1?" hour ago":" hours ago"); const d=Math.round(h/24); return d<30 ? d+(d===1?" day ago":" days ago") : dayOf(t);
+}
+function when(t){ return `<span title="${esc(fullDate(t))}">${ago(t)}</span>`; }
+function user(u){ return USERS.find(x=>x.username===u) || {username:u,name:u,officer_id:0,role:"officer"}; }
+const AV = ["#1b3a78","#2d5fa8","#4a5d7e","#6b4c8a","#8a3d4c","#2f6f5e","#7a5a1e","#3d4f7a"];
+function initials(name){
+  const w=String(name||"?").replace(/\b(Lt|Cdr|Capt|Cmde|Adm|Sub|Lt\. Cdr)\.?\s+/gi,"").trim().split(/\s+/);
+  if(w.length>1 && /^\d+$/.test(w[w.length-1])) return (w[0][0]+w[w.length-1]).toUpperCase().slice(0,3);
+  if(w.length>1) return (w[0][0]+w[w.length-1][0]).toUpperCase();
+  return (w[0]||"?").slice(0,2).toUpperCase(); }
+function avatar(u,size=20){
+  const x=user(u), c=AV[(x.officer_id||0)%AV.length];
+  return `<span class="avatar" style="width:${size}px;height:${size}px;background:${c};font-size:${Math.max(8,Math.round(size*(initials(x.name).length>2?.32:.4)))}px" title="${esc(x.name)}">${esc(initials(x.name))}</span>`;
+}
+function clsLabel(c){ return `<span class="label ${({"TOP SECRET":"solid-red","SECRET":"red","CONFIDENTIAL":"yellow"})[c]||""}">${esc(c)}</span>`; }
+function kindLabel(d){ return d.doctype==="pdf" ? `PDF · ${d.pages} page${d.pages===1?"":"s"}` : "Image"; }
+const SPIN = `<span class="spin"></span>`;
+let toastT;
+function toast(msg,bad){ const t=$("toast"); t.innerHTML=(bad?ic("i-alert"):ic("i-check-circle"))+`<span>${esc(msg)}</span>`; t.className=bad?"bad":""; clearTimeout(toastT); toastT=setTimeout(()=>t.classList.add("hidden"),bad?6000:3000); }
+function copy(text,label){ const done=()=>toast((label||"Text")+" copied"); if(navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(()=>prompt("Copy:",text)); else prompt("Copy:",text); }
+function setFlash(kind,html){ FLASH={kind,html}; }
+function flashHTML(){ if(!FLASH) return ""; const f=FLASH; FLASH=null;
+  const icon={success:"i-check-circle",error:"i-x-circle",warn:"i-alert",info:"i-info"}[f.kind]||"i-info";
+  return `<div class="flash ${f.kind}">${ic(icon)}<div>${f.html}</div><button class="x" onclick="this.parentNode.remove()" aria-label="Dismiss">${ic("i-x")}</button></div>`; }
 
 async function api(path,opt={}){
-  opt.headers = Object.assign({}, opt.headers||{}, TOKEN?{"Authorization":"Bearer "+TOKEN}:{});
+  opt.headers=Object.assign({},opt.headers||{},TOKEN?{"Authorization":"Bearer "+TOKEN}:{});
   let r;
-  try { r = await fetch(API+path,opt); $("offline").classList.add("hidden"); }
-  catch(e){ $("offline").classList.remove("hidden"); throw new Error("server not reachable"); }
-  if (r.status===401 && TOKEN && path!=="/login"){ toast("Your session ended. Please sign in again.",true); logout(); throw new Error("signed out"); }
+  try{ r=await fetch(API+path,opt); $("offline").classList.add("hidden"); }
+  catch(e){ $("offline").classList.remove("hidden"); throw new Error("Cannot reach the NISHAAN server."); }
+  if(r.status===401 && TOKEN && path!=="/login"){ logout(); showLoginError("Your session has ended. Please sign in again."); throw new Error("__signedout"); }
   return r;
 }
-async function errText(r){ try{ const j=await r.json(); return j.detail||JSON.stringify(j); }catch(_){ return "HTTP "+r.status; } }
-
+async function errText(r){ try{ const j=await r.json(); return typeof j.detail==="string"?j.detail:JSON.stringify(j.detail||j); }catch(_){ return "Request failed (HTTP "+r.status+")"; } }
 async function busy(btn,label,fn){
-  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML=label;
+  const old=btn?btn.innerHTML:""; if(btn){ btn.disabled=true; btn.innerHTML=label; }
   try{ await fn(); }
-  catch(e){ if(e.message!=="signed out") toast(e.message==="server not reachable"?"Can't reach the server. Is the black terminal still running?":e.message,true); }
-  finally{ btn.disabled=false; btn.innerHTML=old; }
+  catch(e){ if(e.message!=="__signedout") toast(cap(e.message),true); }
+  finally{ if(btn && document.body.contains(btn) && btn.disabled){ btn.disabled=false; btn.innerHTML=old; } }
 }
 
-/* ---------------------------------------------------------------- login */
-document.querySelectorAll("#acctTable tr[data-u]").forEach(tr=>tr.onclick=()=>{ $("lu").value=tr.dataset.u; $("lp").value=tr.dataset.p; $("lp").focus(); });
+/* ---------------------------------------------------------------- theme */
+function syncThemeLabels(){ const dark=document.documentElement.getAttribute("data-theme")==="dark"; document.querySelectorAll(".themeLbl").forEach(e=>e.textContent=dark?"Light theme":"Dark theme"); }
+function toggleTheme(){
+  const next=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next); try{ localStorage.setItem("nishaan_theme",next); }catch(_){}
+  syncThemeLabels();
+}
+syncThemeLabels();
+
+/* ---------------------------------------------------------------- sign in */
+$("acctList").insertAdjacentHTML("beforeend",DEMO.map(([u,p,n,r])=>`
+  <div class="row" onclick="fillLogin('${u}','${p}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')fillLogin('${u}','${p}')" data-u="${u}">
+    <div class="main"><b>${esc(n)}</b> <span class="muted">· ${esc(r)}</span></div><span class="mono muted">${u} / ${p}</span></div>`).join(""));
+function fillLogin(u,p){ $("lu").value=u; $("lp").value=p; showLoginError(""); $("loginBtn").focus(); }
 $("lp").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
 $("lu").addEventListener("keydown",e=>{ if(e.key==="Enter") $("lp").focus(); });
+function showLoginError(t){ $("loginErrT").textContent=t; $("loginErr").classList.toggle("hidden",!t); }
 
 function doLogin(btn){ return busy(btn,"Signing in…",async()=>{
-  $("loginErr").textContent="";
-  const r = await api("/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:$("lu").value,password:$("lp").value})});
-  if(!r.ok){ $("loginErr").textContent = await errText(r); return; }
-  const j = await r.json(); TOKEN=j.token; ME=j.user;
+  showLoginError("");
+  if(!$("lu").value.trim()||!$("lp").value){ showLoginError("Enter a username and password."); return; }
+  const r=await api("/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:$("lu").value,password:$("lp").value})});
+  if(!r.ok){ showLoginError(cap(await errText(r))+"."); return; }
+  const j=await r.json(); TOKEN=j.token; ME=j.user;
   try{ sessionStorage.setItem("nishaan_token",TOKEN); }catch(_){}
   $("lp").value="";
-  await enterApp();
+  await enterApp(true);
 });}
-
 function logout(){
-  TOKEN=null; ME=null; try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
-  if(lastObjUrl){ URL.revokeObjectURL(lastObjUrl); lastObjUrl=null; }
-  $("readerOut").innerHTML=""; $("traceOut").innerHTML=""; $("shareResult").innerHTML=""; $("pipeline").innerHTML=""; $("voteNodes").innerHTML=""; $("voteQuorum").innerHTML="";
-  $("app").classList.add("hidden"); $("login").classList.remove("hidden"); $("lu").focus();
+  TOKEN=null; ME=null; Q=""; VERIFY=null; AUDIT_FILTER="all"; $("q").value=""; try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
+  if(OBJ_URL){ URL.revokeObjectURL(OBJ_URL); OBJ_URL=null; }
+  $("menu").classList.add("hidden"); $("toast").classList.add("hidden"); $("app").classList.add("hidden"); $("app").style.display=""; $("login").classList.remove("hidden");
+  history.replaceState(null,"",location.pathname); $("lu").focus();
 }
-
-async function enterApp(){
-  $("login").classList.add("hidden"); $("app").classList.remove("hidden");
-  $("whoRole").textContent = ME.role==="admin" ? "Distribution Officer" : "Officer";
-  $("whoName").textContent = ME.name; $("whoId").textContent = "#"+pad(ME.officer_id)+" · "+ME.username;
-  $("nav").innerHTML = NAV[ME.role].map(([k,l],i)=>`<li><button data-v="${k}" onclick="show('${k}')"><i>${pad(i+1)}</i>${l}</button></li>`).join("");
-  $("tamperSheet").classList.toggle("hidden",ME.role!=="admin");
-  $("resetSheet").classList.toggle("hidden",ME.role!=="admin");
-  USERS = await (await api("/users")).json();
-  $("recipList").innerHTML = USERS.filter(u=>u.role==="officer").map(u=>`<label><input type="checkbox" value="${esc(u.username)}">${esc(u.name)}<span class="id">#${pad(u.officer_id)}</span></label>`).join("");
-  $("tWho").innerHTML = USERS.filter(u=>u.role==="officer").map(u=>`<option value="${esc(u.username)}">${esc(u.name)} (#${pad(u.officer_id)})</option>`).join("");
-  refreshNodeStrip();
-  show(NAV[ME.role][0][0]);
+async function enterApp(fresh){
+  $("login").classList.add("hidden"); $("app").classList.remove("hidden"); $("app").style.display="flex";
+  USERS=await (await api("/users")).json();
+  $("avatarBtn").innerHTML=avatar(ME.username,32);
+  $("menuWho").innerHTML=`${avatar(ME.username,32)}<div><b>${esc(ME.name)}</b><div class="muted small">${ME.role==="admin"?"Distribution Officer":"Officer #"+pad(ME.officer_id)} · ${esc(ME.username)}</div></div>`;
+  $("menuKeys").textContent = ME.role==="admin" ? "Settings" : "Keys";
+  syncThemeLabels(); await refreshNodes();
+  if(fresh||!location.hash) go("#/documents"); else route();
 }
+function toggleMenu(e){ e.stopPropagation(); $("menu").classList.toggle("hidden"); }
+document.addEventListener("click",e=>{ if(!$("menu").contains(e.target)) $("menu").classList.add("hidden"); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") $("menu").classList.add("hidden"); });
 
-/* ---------------------------------------------------------------- navigation */
-function show(v){
-  document.querySelectorAll(".view").forEach(s=>s.classList.add("hidden"));
-  $("v-"+v).classList.remove("hidden");
-  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
-  const idx = NAV[ME.role].findIndex(x=>x[0]===v);
-  const label = v==="docs" ? (ME.role==="admin"?"Document registry":"My inbox") : (v==="system"&&ME.role!=="admin"?"Keys":TITLES[v]);
-  $("pageTitle").innerHTML = `<i>${pad(idx+1)}</i>${esc(label)}`;
+/* ---------------------------------------------------------------- routing */
+function go(h){ $("menu").classList.add("hidden"); if(location.hash===h) route(); else location.hash=h; }
+window.addEventListener("hashchange",()=>{ if(ME) route(); });
+function renderTabs(active){
+  $("tabs").innerHTML=TABS[ME.role].map(([k,l,i])=>`<a href="#/${k}" class="${k===active?"on":""}" data-tab="${k}"><span class="t">${ic(i)}${esc(l)}${k==="documents"?`<span class="counter" id="docCount" style="${DOCS.length?"":"display:none"}">${DOCS.length}</span>`:""}</span></a>`).join("");
+}
+async function route(){
+  const raw=(location.hash||"#/documents").slice(2), [path,qs]=raw.split("?"), parts=path.split("/");
+  let view=parts[0]||"documents"; const arg=parts[1];
+  if(!TABS[ME.role].map(t=>t[0]).concat(["doc","settings"]).includes(view)) view="documents";
+  renderTabs(view==="doc"?"documents":view);
+  $("crumb").textContent={documents:ME.role==="admin"?"Documents":"My documents",doc:"Document",share:"Share",ledger:"Ledger",trace:"Trace a leak",nodes:"Nodes",people:"People",audit:"Audit log",settings:ME.role==="admin"?"Settings":"Keys"}[view];
+  $("searchBox").style.visibility = view==="documents" ? "visible" : "hidden";
+  if(OBJ_URL){ URL.revokeObjectURL(OBJ_URL); OBJ_URL=null; }
+  V().innerHTML=`<div style="padding:48px;text-align:center">${SPIN}</div>`;
   window.scrollTo(0,0);
-  ({docs:loadDocs,ledger:loadLedger,trace:loadTraceDocs,nodes:loadNodes,audit:loadAudit,system:loadSystem})[v]?.();
+  try{ await ({documents:vDocuments,doc:()=>vDoc(arg,qs==="open"),share:vShare,ledger:vLedger,trace:()=>vTrace(arg),nodes:vNodes,people:vPeople,audit:vAudit,settings:vSettings})[view](); }
+  catch(e){ if(e.message!=="__signedout") V().innerHTML=`<div class="flash error">${ic("i-x-circle")}<div>${esc(cap(e.message))}</div></div>`; }
 }
 
-/* ---------------------------------------------------------------- nodes */
-async function getNodes(){ return (await api("/nodes")).json(); }
-async function refreshNodeStrip(){
-  try{
-    const {nodes,quorum} = await getNodes();
-    const up = nodes.filter(n=>n.online).length;
-    $("nodeStrip").innerHTML = nodes.map(n=>`<s class="${n.online?"up":""}" title="${n.name} ${n.online?"online":"offline"}"></s>`).join("")+`<em>${up}/5 online · need ${quorum}</em>`;
-  }catch(_){}
+/* ---------------------------------------------------------------- data */
+async function loadDocs(){ DOCS=await (await api("/documents")).json(); const c=$("docCount"); if(c){ c.textContent=DOCS.length; c.style.display=DOCS.length?"":"none"; } return DOCS; }
+async function refreshNodes(){
+  try{ NODES=await (await api("/nodes")).json(); }catch(_){ return; }
+  const up=NODES.nodes.filter(n=>n.online).length;
+  $("nodePill").innerHTML=NODES.nodes.map(n=>`<i class="${n.online?"on":""}"></i>`).join("")+`<em style="font-style:normal;margin-left:3px">${up}/5 nodes</em>`;
+  $("nodePill").title=`${up} of 5 ledger nodes online · ${NODES.quorum} required to open a document`;
 }
-function quorumHTML(n,q,labelGo,labelStop){
-  return `<div class="qbar">${[0,1,2,3,4].map(i=>`<span class="${i<n?"on":""}"></span>`).join("")}</div>
-    <span class="mono">${n} / 5 &nbsp;·&nbsp; need ${q}</span>
-    <span class="verdict ${n>=q?"go":"stop"}">${n>=q?labelGo:labelStop}</span>`;
+function sidebar(){
+  const up=NODES?NODES.nodes.filter(n=>n.online).length:0, q=NODES?NODES.quorum:4, me=user(ME.username);
+  return `<aside class="side">
+    <div class="sb"><h3>About</h3>
+      <p style="margin:0 0 12px">Documents are encrypted once. Each opening is signed by the officer, approved by the ledger nodes and recorded permanently. Every copy carries an invisible mark that identifies its reader.</p>
+      <div class="line">${ic("i-shield")}<span>Post-quantum signatures (ML-DSA-65)</span></div>
+      <div class="line">${ic("i-lock")}<span>AES-256-GCM, key split 3-of-5</span></div>
+      <div class="line">${ic("i-chain")}<span>Tamper-evident SHA3-256 ledger</span></div></div>
+    <div class="sb"><h3>Ledger nodes</h3>
+      <div class="line">${ic("i-server")}<span><b>${up}</b> of 5 online</span>${up>=q?'<span class="label green">Operational</span>':'<span class="label red">Locked</span>'}</div>
+      <div class="line">${ic("i-people")}<span><b>${q}</b> approvals required to open</span></div></div>
+    <div class="sb" style="border:0"><h3>Signed in as</h3>
+      <div class="line">${avatar(ME.username,20)}<span><b>${esc(me.name)}</b></span></div>
+      <div class="line">${ic("i-key")}<span class="mono">${esc(me.dsa_pub_fingerprint||"")}</span></div></div>
+  </aside>`;
 }
-async function loadNodes(){
-  const {nodes,quorum} = await getNodes();
-  $("nodeGrid").innerHTML = nodes.map(n=>`
-    <div class="node ${n.online?"up":"down"}">
-      <div class="nm">${n.name}</div><div class="st">${n.online?"online":"offline"}</div>
-      <div class="fp">key ${esc(n.key_fingerprint)}</div>
-      <div class="act"><button class="btn sm ${n.online?"ghost":"teal"}" onclick="toggleNode(this,'${n.name}',${!n.online})">${n.online?"Take offline":"Bring online"}</button></div>
+
+/* ---------------------------------------------------------------- Documents */
+let Q="";
+function onSearch(){ Q=$("q").value.trim().toLowerCase(); const el=$("docRows"); if(el) el.innerHTML=docRows(); }
+function docRows(){
+  const admin=ME.role==="admin";
+  const list=DOCS.filter(d=>!Q||(d.title+" "+d.filename+" "+d.classification+" "+d.doc_id).toLowerCase().includes(Q));
+  if(!list.length) return `<div class="empty"><span class="muted">No documents match “${esc(Q)}”.</span></div>`;
+  return list.map(d=>`<div class="row" data-doc="${d.doc_id}" data-cls="${esc(d.classification)}">
+      ${ic("i-doc","ic-muted")}
+      <div class="main"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="tt" href="#/doc/${d.doc_id}">${esc(d.title)}</a>${clsLabel(d.classification)}</div>
+        <div class="meta">${kindLabel(d)} · ${admin?"Shared with "+d.recipients.map(u=>esc(user(u).name)).join(", "):"Shared by "+esc(user(d.created_by).name)} · ${when(d.created_at)}</div></div>
+      <div class="right"><span class="muted small nowrap">${d.opens} opening${d.opens===1?"":"s"}</span>
+        ${admin?`<a class="btn sm" href="#/trace/${d.doc_id}">Trace leak</a>`:`<a class="btn sm primary" href="#/doc/${d.doc_id}?open">${ic("i-unlock")}Open</a>`}</div>
     </div>`).join("");
-  const up = nodes.filter(n=>n.online).length;
-  $("nodeQuorum").innerHTML = quorumHTML(up,quorum,"Documents can be unlocked","Every document stays locked");
-  refreshNodeStrip();
 }
-function toggleNode(btn,name,online){ return busy(btn,"…",async()=>{
-  const r = await api("/nodes/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,online})});
-  if(!r.ok) throw new Error(await errText(r));
-  await loadNodes();
+async function vDocuments(){
+  await loadDocs(); await refreshNodes();
+  const admin=ME.role==="admin";
+  const head=`<div class="pagehead"><h2>${admin?"Documents":"My documents"}</h2>${admin?`<a class="btn primary" href="#/share">${ic("i-upload")}Share document</a>`:""}</div>`;
+  const body = !DOCS.length
+    ? `<div class="box"><div class="empty">${ic("i-doc","big")}<h3>${admin?"No documents yet":"No documents shared with you"}</h3>
+        <p class="muted">${admin?"Share a PDF or image with selected officers. It will be encrypted, and every opening will be recorded.":"When the Distribution Officer shares a document with you, it will appear here."}</p>
+        ${admin?`<a class="btn primary" href="#/share">${ic("i-upload")}Share your first document</a>`:""}</div></div>`
+    : `<div class="box"><div class="box-head"><b>${DOCS.length} document${DOCS.length===1?"":"s"}</b><span class="muted small">${admin?"Documents you have distributed":"Opening a document is signed with your key and recorded on the ledger"}</span></div><div id="docRows">${docRows()}</div></div>`;
+  V().innerHTML=flashHTML()+`<div class="layout"><div>${head}${body}</div>${sidebar()}</div>`;
+}
+
+/* ---------------------------------------------------------------- Document page + open */
+async function vDoc(id,autoOpen){
+  await loadDocs();
+  const d=DOCS.find(x=>x.doc_id===id);
+  if(!d){ V().innerHTML=`<div class="flash error">${ic("i-x-circle")}<div>This document does not exist or has not been shared with you. <a href="#/documents">Back to documents</a></div></div>`; return; }
+  const blocks=(await (await api("/ledger")).json()).filter(b=>b.doc_id===id);
+  const admin=ME.role==="admin";
+  V().innerHTML=`${flashHTML()}
+    <div style="margin-bottom:16px"><a href="#/documents" class="small">${ic("i-arrow-left")} ${admin?"Documents":"My documents"}</a></div>
+    <div class="pagehead" style="margin-bottom:4px"><h2>${ic("i-doc","ic-muted")}<span style="word-break:break-word">${esc(d.title)}</span>${clsLabel(d.classification)}</h2>
+      ${admin?`<a class="btn" href="#/trace/${d.doc_id}">${ic("i-search")}Trace a leaked copy</a>`:`<button class="btn primary" id="openBtn" onclick="doOpen(this,'${d.doc_id}')">${ic("i-unlock")}Open document</button>`}</div>
+    <p class="sub">${kindLabel(d)} · shared by ${esc(user(d.created_by).name)} ${when(d.created_at)}</p>
+    <div class="layout"><div>
+      <div id="openArea">${admin?"":`<div class="flash info">${ic("i-info")}<div>Opening this document is <b>signed with your personal key</b> and <b>recorded permanently</b> on the ledger. The copy you receive carries an invisible mark that identifies you.</div></div>`}</div>
+      <div id="hist">${histHTML(blocks)}</div>
+    </div>
+    <aside class="side">
+      <div class="sb"><h3>Details</h3>
+        <div class="line">${ic("i-doc")}<span style="word-break:break-all">${esc(d.filename)}</span></div>
+        <div class="line">${ic("i-clock")}<span>${esc(fullDate(d.created_at))}</span></div>
+        <div class="line">${ic("i-copy")}<span>ID</span><span class="sha" onclick="copy('${d.doc_id}','Document ID')" title="Copy">${d.doc_id}</span></div>
+        <div class="line">${ic("i-lock")}<span>Ciphertext <span class="mono">${esc(d.ciphertext_sha3)}…</span></span></div></div>
+      <div class="sb" style="border:0"><h3>Recipients <span class="counter">${d.recipients.length}</span></h3>
+        ${d.recipients.map(u=>`<div class="line">${avatar(u,20)}<span><b>${esc(user(u).name)}</b> <span class="muted">#${pad(user(u).officer_id)}</span></span></div>`).join("")}</div>
+    </aside></div>`;
+  if(autoOpen && !admin){ history.replaceState(null,"","#/doc/"+id); $("openBtn").click(); }
+}
+function histHTML(blocks){
+  return `<div class="box"><div class="box-head"><b>Access history</b><span class="counter">${blocks.length}</span></div>
+    ${blocks.length?blocks.map(b=>`<div class="row">${avatar(b.username,20)}<div class="main"><b>${esc(user(b.username).name)}</b> opened this document
+      <div class="meta">Block #${b.index} · ${b.valid_votes} of 5 node approvals · session <span class="mono">${esc(b.session)}</span></div></div>
+      <div class="right"><span class="sha" onclick="copy('${b.block_hash}','Block hash')" title="${esc(b.block_hash)}">${esc(b.block_hash.slice(0,7))}</span><span class="muted small nowrap">${when(b.time)}</span></div></div>`).join("")
+      :`<div class="empty" style="padding:24px"><span class="muted">Nobody has opened this document yet.</span></div>`}</div>`;
+}
+async function refreshHist(id){ const el=$("hist"); if(!el) return; const blocks=(await (await api("/ledger")).json()).filter(b=>b.doc_id===id); el.innerHTML=histHTML(blocks); }
+function checkRow(state,title,detail){
+  const icon = state==="run" ? `<span class="spin" style="margin-top:2px"></span>` : `<svg class="ic st ${state}"><use href="#${state==="ok"?"i-check-circle":state==="bad"?"i-x-circle":"i-minus-circle"}"/></svg>`;
+  return `<div class="check">${icon}<div class="d"><div>${title}</div>${detail?`<div class="small mono">${detail}</div>`:""}</div></div>`;
+}
+function nodeLabels(votes){
+  return `<div class="nodes5">${["N1","N2","N3","N4","N5"].map(n=>{ const v=votes[n]||"offline";
+    return v==="signed"?`<span class="label green">${ic("i-check")}${n} approved</span>`:v==="rejected"?`<span class="label red">${n} rejected</span>`:`<span class="label">${n} offline</span>`; }).join("")}</div>`;
+}
+function doOpen(btn,id){ return busy(btn,`${SPIN}Opening…`,async()=>{
+  if(OBJ_URL){ URL.revokeObjectURL(OBJ_URL); OBJ_URL=null; }
+  const area=$("openArea");
+  area.innerHTML=`<div class="box"><div class="box-head"><b>Access request</b><span class="label yellow">In progress</span></div>${checkRow("run","Signing your request and waiting for ledger approval…","")}</div>`;
+  const r=await api(`/open/${id}`,{method:"POST"});
+  if(r.status===423){
+    const j=await r.json();
+    area.innerHTML=`<div class="flash error">${ic("i-lock")}<div><b>Access refused. The document remains locked.</b><br>Only ${j.valid_votes} of 5 ledger nodes are available and ${j.quorum} approvals are required. This attempt has been recorded.</div></div>
+      <div class="box"><div class="box-head"><b>Access request</b><span class="label red">Refused</span></div>
+        ${checkRow("ok","Request signed by "+esc(ME.name),"ML-DSA-65")}
+        ${checkRow("bad",`Ledger approval: ${j.valid_votes} of 5 (${j.quorum} required)`,"")}${nodeLabels(j.votes||{})}
+        ${checkRow("skip","Key shares not released","")}</div>`;
+    await refreshNodes(); return;
+  }
+  if(!r.ok){ area.innerHTML=`<div class="flash error">${ic("i-x-circle")}<div>${esc(cap(await errText(r)))}</div></div>`; return; }
+  const m=JSON.parse(atob(r.headers.get("X-Nishaan-Meta")));
+  const blob=await r.blob(); OBJ_URL=URL.createObjectURL(blob);
+  area.innerHTML=`<div class="flash success">${ic("i-check-circle")}<div><b>Document opened.</b> This opening is recorded as ledger block #${m.block_index}. Your copy is marked for officer #${pad(m.officer_id)}.</div></div>
+    <div class="box"><div class="box-head"><b>Access request</b><span class="label green">Approved</span><span class="muted small" style="margin-left:auto">${m.valid_votes} of 5 approvals · ${m.quorum} required</span></div>
+      ${checkRow("ok","Request signed by "+esc(m.name),"ML-DSA-65 signature "+esc(m.officer_sig_fingerprint)+"…")}
+      ${checkRow("ok",`Approved by ${m.valid_votes} of 5 ledger nodes`,"")}${nodeLabels(m.votes)}
+      ${checkRow("ok",`Recorded as block #${m.block_index}`,"hash "+esc(m.block_hash))}
+      ${checkRow("ok","Decryption key rebuilt from "+m.shares_from.join(", "),"Shamir 3-of-5")}
+      ${checkRow("ok","Key delivered under your ML-KEM-768 public key",m.kem_ciphertext_bytes+"-byte capsule "+esc(m.kem_ciphertext_fingerprint)+"…")}
+      ${checkRow("ok","Decrypted and marked for officer #"+pad(m.officer_id),m.doctype==="pdf"?"All "+m.pages+" pages":"Image")}</div>
+    <div class="box viewer"><div class="box-head">
+      <span style="display:flex;gap:8px;align-items:center;min-width:0">${ic("i-doc","ic-muted")}<b class="mono" style="font-size:13px;word-break:break-all">${esc(m.filename)}</b><span class="muted small nowrap">${(blob.size/1048576).toFixed(2)} MB</span></span>
+      <a class="btn sm" href="${OBJ_URL}" download="${esc(m.filename)}" id="dlBtn">${ic("i-download")}Download</a></div>
+      ${m.doctype==="pdf"?`<iframe src="${OBJ_URL}" title="${esc(m.title)}"></iframe>`:`<div class="imgwrap"><img src="${OBJ_URL}" alt="${esc(m.title)}"></div>`}</div>`;
+  btn.disabled=false; btn.innerHTML=`${ic("i-unlock")}Open again`;
+  refreshNodes(); refreshHist(id);
 });}
 
-/* ---------------------------------------------------------------- distribute */
+/* ---------------------------------------------------------------- Share */
+async function vShare(){
+  USERS=await (await api("/users")).json();
+  const officers=USERS.filter(u=>u.role==="officer"&&u.active!==false);
+  V().innerHTML=`<div class="narrow">
+    <h1 class="title">Share a new document</h1>
+    <p class="sub">The document is encrypted once and its key is divided among the five ledger nodes. Only the recipients you select can open it, and every opening is recorded.</p>
+    <hr class="rule" style="margin-top:0">
+    <p class="small muted">Required fields are marked with an asterisk (<span class="req">*</span>).</p>
+    <div class="field"><label>Document <span class="req">*</span></label>
+      <div class="drop" id="shareDrop" onclick="$('shareFile').click()" role="button" tabindex="0">${ic("i-upload","ic-muted")}
+        <div>Drag a file here or <a href="javascript:void 0">choose a file</a></div><div class="small muted">PDF, PNG or JPG · up to 30 MB</div><div class="f" id="shareName"></div></div>
+      <input type="file" id="shareFile" class="hidden" accept="application/pdf,image/png,image/jpeg"></div>
+    <div class="field"><label for="shareTitle">Title</label><input class="form" id="shareTitle" placeholder="e.g. Fleet movement order 14/26"><div class="hint">If left blank, the file name is used.</div></div>
+    <div class="field"><label for="shareClass">Classification <span class="req">*</span></label>
+      <select class="form" id="shareClass" style="width:auto;min-width:220px"><option>RESTRICTED</option><option>CONFIDENTIAL</option><option selected>SECRET</option><option>TOP SECRET</option></select></div>
+    <div class="field"><label>Recipients <span class="req">*</span></label>
+      <div class="pick" id="recips">${officers.map(u=>`<label><input type="checkbox" value="${esc(u.username)}">${avatar(u.username,24)}<span class="nm"><b>${esc(u.name)}</b> <span class="muted">· ${esc(u.username)}</span></span><span class="mono muted">#${pad(u.officer_id)}</span></label>`).join("")}</div>
+      <div class="hint">Only the selected officers will be able to open this document. <a href="javascript:void 0" onclick="pickAll(true)">Select all</a> · <a href="javascript:void 0" onclick="pickAll(false)">Clear</a></div></div>
+    <hr class="rule">
+    <button class="btn primary" id="shareBtn" onclick="doShare(this)">${ic("i-upload")}Share document</button>
+  </div>`;
+  wireDrop("shareDrop","shareFile","shareName");
+}
+function pickAll(v){ document.querySelectorAll("#recips input").forEach(i=>i.checked=v); }
 function wireDrop(dropId,inputId,nameId){
   const d=$(dropId), inp=$(inputId);
-  inp.onchange=()=>{ $(nameId).textContent = inp.files[0] ? inp.files[0].name+"  ·  "+(inp.files[0].size/1048576).toFixed(2)+" MB" : ""; };
-  d.addEventListener("dragover",e=>{e.preventDefault();d.classList.add("over");});
+  const show=()=>{ const f=inp.files[0]; $(nameId).textContent=f?f.name+"  ·  "+(f.size/1048576).toFixed(2)+" MB":""; };
+  inp.onchange=show;
+  d.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inp.click(); }});
+  d.addEventListener("dragover",e=>{ e.preventDefault(); d.classList.add("over"); });
   d.addEventListener("dragleave",()=>d.classList.remove("over"));
-  d.addEventListener("drop",e=>{e.preventDefault();d.classList.remove("over"); if(e.dataTransfer.files.length){ inp.files=e.dataTransfer.files; inp.onchange(); }});
+  d.addEventListener("drop",e=>{ e.preventDefault(); d.classList.remove("over"); if(e.dataTransfer.files.length){ inp.files=e.dataTransfer.files; show(); } });
 }
-wireDrop("shareDrop","shareFile","shareName");
-wireDrop("traceDrop","traceFile","traceName");
-function pickAll(v){ document.querySelectorAll("#recipList input").forEach(i=>i.checked=v); }
-
-function doShare(btn){ return busy(btn,"Encrypting…",async()=>{
-  const f = $("shareFile").files[0];
-  if(!f) throw new Error("Choose a PDF or image first.");
-  const rec = [...document.querySelectorAll("#recipList input:checked")].map(i=>i.value);
-  if(!rec.length) throw new Error("Tick at least one recipient officer.");
-  const fd = new FormData(); fd.append("file",f); fd.append("title",$("shareTitle").value); fd.append("classification",$("shareClass").value); fd.append("recipients",rec.join(","));
-  const r = await api("/documents",{method:"POST",body:fd});
+function doShare(btn){ return busy(btn,`${SPIN}Encrypting…`,async()=>{
+  const f=$("shareFile").files[0];
+  if(!f) throw new Error("Choose a document to share.");
+  const rec=[...document.querySelectorAll("#recips input:checked")].map(i=>i.value);
+  if(!rec.length) throw new Error("Select at least one recipient.");
+  const fd=new FormData(); fd.append("file",f); fd.append("title",$("shareTitle").value); fd.append("classification",$("shareClass").value); fd.append("recipients",rec.join(","));
+  const r=await api("/documents",{method:"POST",body:fd});
   if(!r.ok) throw new Error(await errText(r));
-  const d = await r.json();
-  $("shareResult").innerHTML = `
-    <div class="sheet"><span class="tab">Sealed</span><div class="inner">
-      <div class="sealed">
-        <div>${stamp(d.classification).replace('class="stamp','class="stamp big')}</div>
-        <div>
-          <div style="font:600 20px var(--head);letter-spacing:.03em">${esc(d.title)}</div>
-          <div class="small mute">${esc(d.filename)} · ${d.doctype==="pdf"?d.pages+" page PDF":"image"} · for ${d.recipients.map(u=>esc(nameOf(u))).join(", ")}</div>
-          <div style="margin-top:10px">Document ID&nbsp; <span class="idchip" onclick="copy('${d.doc_id}')" title="click to copy">${d.doc_id}</span> <span class="small mute">&larr; click to copy; recipients will also see it in their inbox</span></div>
-        </div>
-      </div>
-      <div class="split">${["N1","N2","N3","N4","N5"].map((n,i)=>`<div><b>${n}</b>share ${i+1}</div>`).join("")}</div>
-      <p class="small mute" style="margin:10px 0 0">AES-256-GCM ciphertext SHA3 <span class="mono">${esc(d.ciphertext_sha3)}…</span>. The key was split 3-of-5 and then discarded. No single node, and not this server, can open the file on its own.</p>
-    </div></div>`;
-  $("shareFile").value=""; $("shareName").textContent=""; $("shareTitle").value=""; pickAll(false);
-  toast("Document sealed and distributed.");
+  const d=await r.json();
+  setFlash("success",`<b>Document shared.</b> “${esc(d.title)}” has been encrypted and shared with ${d.recipients.map(u=>esc(user(u).name)).join(", ")}. The decryption key was split across the five ledger nodes and then discarded.`);
+  go("#/doc/"+d.doc_id);
 });}
 
-/* ---------------------------------------------------------------- registry / inbox */
-async function loadDocs(){
-  const admin = ME.role==="admin";
-  $("docsLede").textContent = admin ? "Every document you have distributed, who can open it, and how many times it has been opened." :
-    "Documents shared with you. Opening one is signed by you and permanently recorded on the ledger.";
-  $("docsTab").textContent = admin ? "Registry" : "Inbox";
-  DOCS = await (await api("/documents")).json();
-  if(!DOCS.length){ $("docsBody").innerHTML = `<div class="empty">${admin?"Nothing distributed yet. Go to <b>Distribute</b> to seal your first document.":"Nothing has been shared with you yet. Ask the Distribution Officer (sign in as <b>admin</b>) to share a document with you."}</div>`; return; }
-  $("docsBody").innerHTML = `<table class="list"><thead><tr><th>Document</th><th>Class</th><th>${admin?"Recipients":"From"}</th><th>Opened</th><th>ID</th><th></th></tr></thead><tbody>${
-    DOCS.map(d=>`<tr>
-      <td><b>${esc(d.title)}</b><div class="small mute">${esc(d.filename)} · ${d.doctype==="pdf"?d.pages+" pp":"image"} · ${when(d.created_at)}</div></td>
-      <td>${stamp(d.classification)}</td>
-      <td class="small">${admin ? d.recipients.map(u=>esc(nameOf(u))).join("<br>") : esc(nameOf(d.created_by))}</td>
-      <td class="mono">${d.opens}×</td>
-      <td><span class="idchip" onclick="copy('${d.doc_id}')" title="click to copy">${d.doc_id}</span></td>
-      <td>${admin ? `<button class="btn sm ghost" onclick="gotoTrace('${d.doc_id}')">Trace</button>` : `<button class="btn sm teal" onclick="gotoOpen('${d.doc_id}')">Open</button>`}</td>
-    </tr>`).join("")}</tbody></table>`;
-}
-function gotoOpen(id){ show("reader"); $("openId").value=id; $("openBtn").click(); }
-let PENDING_TRACE=null;
-function gotoTrace(id){ PENDING_TRACE=id; show("trace"); }
-
-/* ---------------------------------------------------------------- open (reader) */
-function step(txt,cls="done"){ const li=document.createElement("li"); li.className=cls; li.innerHTML=txt; $("pipeline").appendChild(li); return li; }
-function renderVoteNodes(state){
-  $("voteNodes").innerHTML = ["N1","N2","N3","N4","N5"].map(n=>{
-    const s = state[n]||"waiting";
-    const cls = {signed:"up signed",offline:"down",rejected:"rejected",working:"working",waiting:"down"}[s];
-    const label = {signed:"verified · signed",offline:"offline · no vote",rejected:"rejected",working:"checking signature…",waiting:"waiting"}[s];
-    return `<div class="node ${cls}"><div class="nm">${n}</div><div class="st">${label}</div></div>`;
-  }).join("");
-}
-async function animateVotes(votes){
-  const state={};
-  for(const n of ["N1","N2","N3","N4","N5"]){
-    state[n]="working"; renderVoteNodes(state); await sleep(230);
-    state[n]=votes[n]||"offline"; renderVoteNodes(state); await sleep(90);
+/* ---------------------------------------------------------------- Ledger */
+let VERIFY=null;
+async function vLedger(){
+  const [blocks]=await Promise.all([api("/ledger").then(r=>r.json()),loadDocs()]);
+  const vmap={}; (VERIFY?.blocks||[]).forEach(b=>vmap[b.index]=b);
+  const admin=ME.role==="admin";
+  const badList=(VERIFY?.blocks||[]).filter(b=>!b.ok);
+  const banner = !VERIFY ? "" : VERIFY.ok
+    ? `<div class="flash success">${ic("i-check-circle")}<div><b>Ledger verified.</b> All ${VERIFY.checked} record${VERIFY.checked===1?"":"s"} were checked from scratch. Every hash, link, officer signature and node approval is valid.</div></div>`
+    : `<div class="flash error">${ic("i-x-circle")}<div><b>Tampering detected.</b> ${badList.map(b=>"Block #"+b.index).join(", ")} ${badList.length===1?"no longer matches its":"no longer match their"} signatures. Records cannot be altered without detection.</div></div>`;
+  let rows="", lastDay="";
+  if(!blocks.length) rows=`<div class="box"><div class="empty">${ic("i-chain","big")}<h3>No records yet</h3><p class="muted">A record is added here each time an officer opens a document.</p></div></div>`;
+  else {
+    rows=blocks.map(b=>{
+      const day=dayOf(b.time), hdr=day!==lastDay?`${lastDay?"</div>":""}<div class="tl-date">${ic("i-clock")}Openings on ${esc(day)}</div><div class="box">`:""; lastDay=day;
+      const v=vmap[b.index], bad=v&&!v.ok, doc=DOCS.find(d=>d.doc_id===b.doc_id);
+      return hdr+`<div class="row ${bad?"bad-row":""}" data-block="${b.index}">${avatar(b.username,32)}
+        <div class="main"><div><b>${esc(user(b.username).name)}</b> opened ${doc?`<a href="#/doc/${doc.doc_id}">${esc(doc.title)}</a>`:`document <span class="mono">${esc(b.doc_id)}</span>`}</div>
+          <div class="meta">Block #${b.index} · ${b.valid_votes} of 5 node approvals · ${when(b.time)}</div>
+          ${bad?`<ul class="problems">${v.problems.map(p=>`<li>${esc(cap(p))}</li>`).join("")}</ul>`:""}</div>
+        <div class="right">${v?(v.ok?'<span class="label green">Verified</span>':'<span class="label red">Tampered</span>'):""}
+          <span class="sha" onclick="copy('${b.block_hash}','Block hash')" title="${esc(b.block_hash)}">${esc(b.block_hash.slice(0,7))}</span></div></div>`;
+    }).join("")+"</div>";
   }
+  const tamper = admin&&blocks.length ? `<h3 class="sec" style="margin-top:32px;color:var(--danger)">Tamper demonstration</h3>
+    <div class="dz"><div class="row" style="flex-wrap:wrap">
+      <div class="main" style="min-width:240px"><b>Rewrite a past record</b><div class="meta">Simulates an insider with direct database access changing who opened a document. Afterwards, select Verify ledger.</div></div>
+      <div class="right" style="flex-wrap:wrap">
+        <select class="form" id="tBlock" style="width:auto" aria-label="Record">${blocks.slice().reverse().map(b=>`<option value="${b.index}">Block #${b.index}</option>`).join("")}</select>
+        <select class="form" id="tWho" style="width:auto" aria-label="Officer to blame">${USERS.filter(u=>u.role==="officer").map(u=>`<option value="${esc(u.username)}">Blame ${esc(u.name)}</option>`).join("")}</select>
+        <select class="form" id="tMode" style="width:auto" aria-label="Method"><option value="edit">Edit record</option><option value="rehash">Edit and recompute hash</option></select>
+        <button class="btn danger" onclick="doTamper(this)">Tamper</button></div></div>
+      <div class="row"><div class="main"><b>Undo all tampering</b><div class="meta">Restore every record to its sealed original.</div></div><div class="right"><button class="btn" onclick="doRestore(this)">Restore records</button></div></div>
+    </div>` : "";
+  V().innerHTML=flashHTML()+`<div class="pagehead"><h2>Ledger</h2><button class="btn primary" id="verifyBtn" onclick="doVerify(this)">${ic("i-shield")}Verify ledger</button></div>
+    <p class="sub">Every opening is a permanent record: the officer's signed request, sealed with a SHA3-256 hash, linked to the previous record and approved by at least four nodes.</p>
+    ${banner}${rows}${tamper}`;
 }
-function doOpen(btn){ return busy(btn,"Nodes voting…",async()=>{
-  const id = $("openId").value.trim();
-  if(!/^[0-9a-f]{12}$/.test(id)) throw new Error("Paste the 12-character document ID from your inbox.");
-  if(lastObjUrl){ URL.revokeObjectURL(lastObjUrl); lastObjUrl=null; }
-  $("readerOut").innerHTML=""; $("pipeline").innerHTML=""; $("voteQuorum").innerHTML=""; renderVoteNodes({});
-  step(`Signing receipt as <b>${esc(ME.name)}</b> with your ML-DSA-65 key…`,"");
-  const r = await api(`/open/${id}`,{method:"POST"});
-  $("pipeline").innerHTML="";
-  if(r.status===423){
-    const j = await r.json();
-    step(`Receipt signed by <b>${esc(ME.name)}</b> (ML-DSA-65)`);
-    await animateVotes(j.votes||{});
-    $("voteQuorum").innerHTML = quorumHTML(j.valid_votes,j.quorum,"","Locked");
-    step(`Quorum not reached: only ${j.valid_votes} of 5 nodes could sign, and ${j.quorum} are needed. No key shares released. The file stays locked.`,"fail");
-    step(`This refused attempt was written to the audit log.`,"fail");
-    return;
-  }
-  if(!r.ok){ step(esc(await errText(r)),"fail"); return; }
-  const m = JSON.parse(atob(r.headers.get("X-Nishaan-Meta")));
-  const blob = await r.blob();
-  step(`Receipt signed by <b>${esc(m.name)}</b> &middot; ML-DSA-65 signature <span class="mono">${esc(m.officer_sig_fingerprint)}…</span>`);
-  await animateVotes(m.votes);
-  $("voteQuorum").innerHTML = quorumHTML(m.valid_votes,m.quorum,"Quorum reached","Locked");
-  step(`Block <b>#${m.block_index}</b> sealed &middot; <span class="mono">${short(m.block_hash,16)}</span> &middot; linked to <span class="mono">${short(m.prev_hash,10)}</span>`);
-  step(`Key shares released by <b>${m.shares_from.join(", ")}</b> &rarr; file key rebuilt (Shamir 3-of-5)`);
-  step(`Key delivered wrapped under your ML-KEM-768 public key &middot; ${m.kem_ciphertext_bytes}-byte capsule <span class="mono">${esc(m.kem_ciphertext_fingerprint)}…</span>`);
-  step(`Decrypted (AES-256-GCM) and marked for officer <b>#${pad(m.officer_id)}</b> on ${m.doctype==="pdf"?"all "+m.pages+" pages":"the image"}`);
-  lastObjUrl = URL.createObjectURL(blob);
-  const viewer = m.doctype==="pdf" ? `<iframe src="${lastObjUrl}" title="document"></iframe>` : `<img src="${lastObjUrl}" alt="document">`;
-  $("readerOut").innerHTML = `
-    <div class="sheet"><span class="tab">Your marked copy</span><div class="inner" style="padding:0">
-      <div class="copyline"><span>${esc(m.title)} &nbsp;·&nbsp; ${esc(m.classification)}</span><span>COPY #${pad(m.officer_id)} · ${esc(m.name)} · session ${esc(m.session)}</span></div>
-      <div class="docframe">${viewer}</div>
-      <div style="padding:14px 16px" class="row"><a class="btn teal" href="${lastObjUrl}" download="${esc(m.filename)}">Download copy</a><span class="small mute">Saved as <span class="mono">${esc(m.filename)}</span>. If this file leaks, it points back to you.</span></div>
-    </div></div>`;
-  refreshNodeStrip();
-});}
-$("openId").addEventListener("keydown",e=>{ if(e.key==="Enter") $("openBtn").click(); });
-
-/* ---------------------------------------------------------------- ledger */
-let VERIFY = null, BLOCKS = [];
-async function loadLedger(){
-  const [bl, docs] = await Promise.all([api("/ledger").then(r=>r.json()), api("/documents").then(r=>r.json())]);
-  BLOCKS = bl; DOCS = docs;
-  $("tBlock").innerHTML = BLOCKS.slice().reverse().map(b=>`<option value="${b.index}">#${b.index}</option>`).join("");
-  renderChain();
-}
-function renderChain(){
-  const vmap = {}; (VERIFY?.blocks||[]).forEach(b=>vmap[b.index]=b);
-  if(!BLOCKS.length){ $("chain").innerHTML = `<div class="empty">No openings recorded yet. Blocks appear here when an officer opens a document.</div>`; return; }
-  $("chain").innerHTML = BLOCKS.map(b=>{
-    const v = vmap[b.index]; const bad = v && !v.ok;
-    const doc = DOCS.find(d=>d.doc_id===b.doc_id);
-    const votes = Object.keys(b.votes||{});
-    return `<div class="blk ${bad?"bad":""}">
-      <div class="ix"><small>BLOCK</small>${b.index}</div>
-      <div class="body">
-        <div class="t">${esc(nameOf(b.username))} <span class="mono mute">#${pad(b.officer_id)}</span> opened ${doc?`<i>${esc(doc.title)}</i>`:`<span class="mono">${esc(b.doc_id)}</span>`}</div>
-        <div class="small mute">${when(b.time)} &middot; session <span class="mono">${esc(b.session)}</span></div>
-        <div class="hashes"><span>hash</span><code title="${esc(b.block_hash)}">${esc(b.block_hash)}</code><span>prev</span><code title="${esc(b.prev_hash)}">${esc(b.prev_hash)}</code><span>receipt</span><code title="${esc(b.receipt_hash)}">${esc(b.receipt_hash)}</code><span>officer sig</span><code>${esc(b.officer_sig_fingerprint)}… (ML-DSA-65)</code></div>
-        ${bad?`<ul class="problems">${v.problems.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}
-      </div>
-      <div class="side">
-        <div class="pips">${["N1","N2","N3","N4","N5"].map(n=>`<s class="${votes.includes(n)?"on":""}" title="${n}${votes.includes(n)?" signed "+b.votes[n]:" did not vote"}"></s>`).join("")}</div>
-        <div class="small">${b.valid_votes}/5 node signatures</div>
-        ${v ? `<span class="vstamp ${v.ok?"ok":"bad"}">${v.ok?"Verified":"Tampered"}</span>` : ""}
-      </div>
-    </div>`;}).join("");
-}
-function showVerify(v){
-  VERIFY = v;
-  $("verifyBanner").innerHTML = v.ok
-    ? `<div class="banner-state ok">&#10003; All ${v.checked} block${v.checked===1?"":"s"} verified: every hash, link, officer signature and node vote checks out</div>`
-    : `<div class="banner-state bad">&#10007; Tampering detected in block ${v.blocks.filter(b=>!b.ok).map(b=>"#"+b.index).join(", ")}. The record no longer matches its signatures.</div>`;
-  renderChain();
-}
-function doVerify(btn){ return busy(btn,"Verifying…",async()=>{ await loadLedger(); showVerify(await (await api("/ledger/verify")).json()); });}
+function doVerify(btn){ return busy(btn,`${SPIN}Verifying…`,async()=>{ VERIFY=await (await api("/ledger/verify")).json(); await vLedger(); });}
 function doTamper(btn){ return busy(btn,"Tampering…",async()=>{
-  if(!$("tBlock").value) throw new Error("There are no blocks to tamper with yet.");
-  const r = await api("/ledger/tamper",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:+$("tBlock").value,mode:$("tMode").value,username:$("tWho").value})});
+  const idx=+$("tBlock").value, who=$("tWho").selectedOptions[0].textContent.replace("Blame ","");
+  const r=await api("/ledger/tamper",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:idx,mode:$("tMode").value,username:$("tWho").value})});
   if(!r.ok) throw new Error(await errText(r));
-  VERIFY=null; $("verifyBanner").innerHTML=""; await loadLedger();
-  toast(`Block #${$("tBlock").value} rewritten. It looks normal. Now press "Verify entire chain".`);
+  VERIFY=null; setFlash("warn",`<b>Block #${idx} was rewritten</b> to name ${esc(who)}. It now looks normal in the list. Select <b>Verify ledger</b> to check it.`); await vLedger();
 });}
 function doRestore(btn){ return busy(btn,"Restoring…",async()=>{
-  const r = await api("/ledger/restore",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
-  await loadLedger(); showVerify(await r.json()); toast("All blocks restored to their sealed versions.");
+  const r=await api("/ledger/restore",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
+  VERIFY=await r.json(); await vLedger(); toast("All records restored");
 });}
 
-/* ---------------------------------------------------------------- trace */
-async function loadTraceDocs(){
-  const keep = PENDING_TRACE || $("traceDoc").value; PENDING_TRACE=null;
-  DOCS = await (await api("/documents")).json();
-  $("traceDoc").innerHTML = DOCS.length ? DOCS.map(d=>`<option value="${d.doc_id}">${esc(d.title)} · ${d.doc_id}</option>`).join("") : `<option value="">No documents distributed yet</option>`;
-  if(keep && DOCS.some(d=>d.doc_id===keep)) $("traceDoc").value = keep;
+/* ---------------------------------------------------------------- Trace */
+async function vTrace(pre){
+  await loadDocs();
+  if(!DOCS.length){ V().innerHTML=`<div class="pagehead"><h2>Trace a leak</h2></div><div class="box"><div class="empty">${ic("i-search","big")}<h3>Nothing to trace yet</h3><p class="muted">Share a document first. Leaked copies are traced against their original.</p><a class="btn primary" href="#/share">Share document</a></div></div>`; return; }
+  V().innerHTML=`<div class="narrow">
+    <h1 class="title">Trace a leaked copy</h1>
+    <p class="sub">Upload a copy found outside authorised channels, such as a forwarded PDF, a screenshot or a re-saved image. NISHAAN reads the invisible mark and matches it to the ledger.</p>
+    <hr class="rule" style="margin-top:0">
+    <div class="field"><label for="traceDoc">Original document <span class="req">*</span></label>
+      <select class="form" id="traceDoc">${DOCS.map(d=>`<option value="${d.doc_id}" ${d.doc_id===pre?"selected":""}>${esc(d.title)} (${esc(d.classification)})</option>`).join("")}</select></div>
+    <div class="field"><label>Leaked copy <span class="req">*</span></label>
+      <div class="drop" id="traceDrop" onclick="$('traceFile').click()" role="button" tabindex="0">${ic("i-upload","ic-muted")}
+        <div>Drag the file here or <a href="javascript:void 0">choose a file</a></div><div class="small muted">PDF, PNG or JPG. Resized or re-saved copies are supported.</div><div class="f" id="traceName"></div></div>
+      <input type="file" id="traceFile" class="hidden" accept="application/pdf,image/png,image/jpeg"></div>
+    <button class="btn primary" id="traceBtn" onclick="doTrace(this)">${ic("i-search")}Identify source</button>
+    <div id="traceOut" style="margin-top:24px"></div></div>`;
+  wireDrop("traceDrop","traceFile","traceName");
 }
-function doTrace(btn){ return busy(btn,"Reading the mark…",async()=>{
-  const id = $("traceDoc").value, f = $("traceFile").files[0];
-  if(!id) throw new Error("Distribute a document first.");
-  if(!f) throw new Error("Drop the leaked copy into the box first.");
-  const fd = new FormData(); fd.append("doc_id",id); fd.append("file",f);
-  const r = await api("/trace",{method:"POST",body:fd});
+function doTrace(btn){ return busy(btn,`${SPIN}Analysing…`,async()=>{
+  const id=$("traceDoc").value, f=$("traceFile").files[0];
+  if(!f) throw new Error("Choose the leaked copy to analyse.");
+  const fd=new FormData(); fd.append("doc_id",id); fd.append("file",f);
+  const r=await api("/trace",{method:"POST",body:fd}); if(!r.ok) throw new Error(await errText(r));
+  const j=await r.json(), L=j.layers;
+  if(!j.found){ $("traceOut").innerHTML=`<div class="flash info" id="traceNone">${ic("i-info")}<div><b>No NISHAAN mark found.</b> This file may not be a copy of the selected document, or it was altered too heavily to read.</div></div>`; return; }
+  const pct=Math.round((L.pixel_confidence||0)*100);
+  $("traceOut").innerHTML=`<div class="box" id="traceResult"><div class="box-head"><b>Source identified</b>${j.was_recipient?'<span class="label">Authorised recipient</span>':'<span class="label red">Not a recipient</span>'}${j.layers_agree?"":'<span class="label yellow">Marks disagree</span>'}</div>
+      <div class="result">${avatar(j.username,56)}<div><div class="nm" id="traceName2">${esc(j.name)}</div><div class="muted">Officer #${pad(j.officer_id)} · ${esc(j.username)}</div></div></div>
+      <div class="kv">
+        <div>Pixel mark</div><div>${L.pixel!=null?`Officer #${pad(L.pixel)} · ${L.pages_agreeing||1} of ${L.pages_checked} page${L.pages_checked===1?"":"s"} agree`:"Not readable"}</div>
+        <div>Confidence</div><div>${L.pixel!=null?`<span class="meter"><span style="width:${pct}%"></span></span>${pct}%`:"—"}</div>
+        <div>Metadata mark</div><div>${L.metadata!=null?"Officer #"+pad(L.metadata):'<span class="muted">Not present (image file, or removed)</span>'}</div>
+        <div>Conclusion</div><div>${esc(j.verdict)}</div></div></div>
+    <div class="box"><div class="box-head"><b>Ledger evidence</b><span class="counter">${j.ledger_blocks.length}</span></div>
+      ${j.ledger_blocks.length?j.ledger_blocks.map(b=>`<div class="row">${ic("i-chain","ic-muted")}<div class="main">Block #${b.index} · opened ${esc(fullDate(b.time))}<div class="meta">${b.valid_votes} of 5 node approvals · session <span class="mono">${esc(b.session)}</span></div></div><div class="right"><span class="sha" onclick="copy('${b.block_hash}','Block hash')">${esc(b.block_hash.slice(0,7))}</span></div></div>`).join("")
+        :`<div class="row"><div class="main" style="color:var(--danger)">No signed opening by this officer is on the ledger.</div></div>`}</div>`;
+});}
+
+/* ---------------------------------------------------------------- Nodes */
+async function vNodes(){
+  await refreshNodes();
+  const up=NODES.nodes.filter(n=>n.online).length, q=NODES.quorum;
+  V().innerHTML=`<div class="pagehead"><h2>Ledger nodes</h2></div>
+    <p class="sub">Each node holds one share of every document key and its own ML-DSA-65 signing key. Opening a document requires approval from ${q} of 5 nodes.</p>
+    <div id="nodeState">${up>=q?`<div class="flash success">${ic("i-check-circle")}<div><b>Operational.</b> ${up} of 5 nodes are online, so documents can be opened.</div></div>`
+      :`<div class="flash error">${ic("i-lock")}<div><b>All documents are locked.</b> Only ${up} of 5 nodes are online and ${q} are required.</div></div>`}</div>
+    <div class="box"><div class="box-head"><b>Nodes</b><span class="counter">5</span></div>
+      ${NODES.nodes.map(n=>`<div class="row" data-node="${n.name}">${ic("i-server","ic-muted")}
+        <div class="main"><b>${n.name}</b> ${n.online?'<span class="label green">Online</span>':'<span class="label">Offline</span>'}<div class="meta">Signing key <span class="mono">${esc(n.key_fingerprint)}</span></div></div>
+        <div class="right"><button class="btn sm ${n.online?"":"primary"}" onclick="toggleNode(this,'${n.name}',${!n.online})">${n.online?"Take offline":"Bring online"}</button></div></div>`).join("")}</div>`;
+}
+function toggleNode(btn,name,online){ return busy(btn,SPIN,async()=>{
+  const r=await api("/nodes/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,online})});
+  if(!r.ok) throw new Error(await errText(r)); await vNodes();
+});}
+
+
+/* ---------------------------------------------------------------- People (admin) */
+async function vPeople(){
+  USERS=await (await api("/users")).json();
+  const offs=USERS.filter(u=>u.role==="officer"), act=offs.filter(u=>u.active!==false).length;
+  V().innerHTML=flashHTML()+`<div class="pagehead"><h2>People</h2></div>
+    <p class="sub">Only the Distribution Officer can create accounts. Every new person is issued their own post-quantum signing and encryption keys, and their name is printed on every copy they open.</p>
+    <div class="layout"><div>
+      <div class="box"><div class="box-head"><b>Officers</b><span class="counter">${offs.length}</span><span class="muted small">${act} active</span></div>
+        ${USERS.map(u=>`<div class="row" data-user="${esc(u.username)}">${avatar(u.username,32)}
+          <div class="main"><div><b>${esc(u.name)}</b> ${u.role==="admin"?'<span class="label blue">Distribution Officer</span>':`<span class="mono muted">#${pad(u.officer_id)}</span>`} ${u.active===false?'<span class="label">Deactivated</span>':""}</div>
+            <div class="meta">${esc(u.username)} · signing key <span class="mono">${esc(u.dsa_pub_fingerprint)}</span></div></div>
+          <div class="right">${u.role==="admin"?"":(u.active===false?`<button class="btn sm" onclick="setActive(this,'${esc(u.username)}',true)">Reactivate</button>`:`<button class="btn sm danger" onclick="setActive(this,'${esc(u.username)}',false)">Deactivate</button>`)}</div></div>`).join("")}
+      </div>
+    </div>
+    <aside class="side"><div class="sb"><h3>Add an officer</h3>
+      <div class="field"><label for="nuName">Full name and rank <span class="req">*</span></label><input class="form" id="nuName" placeholder="e.g. Lt. Priya Nair"></div>
+      <div class="field"><label for="nuUser">Username <span class="req">*</span></label><input class="form" id="nuUser" placeholder="e.g. nair" autocapitalize="none" spellcheck="false"><div class="hint">Lowercase letters and numbers, 3–32 characters.</div></div>
+      <div class="field"><label for="nuPass">Temporary password <span class="req">*</span></label><input class="form" id="nuPass" type="text" placeholder="At least 6 characters" autocomplete="off"></div>
+      <div class="field"><label for="nuId">Officer number</label><input class="form" id="nuId" type="number" min="1" max="65535" placeholder="Assigned automatically"></div>
+      <button class="btn primary block" id="nuBtn" onclick="addPerson(this)">${ic("i-people")}Add officer</button>
+    </div>
+    <div class="sb"><h3>Deactivating</h3><p style="margin:0">A deactivated officer can no longer sign in or receive documents. Their past ledger records are kept, so the history stays verifiable.</p></div></aside></div>`;
+}
+function addPerson(btn){ return busy(btn,`${SPIN}Creating…`,async()=>{
+  const body={name:$("nuName").value,username:$("nuUser").value,password:$("nuPass").value};
+  if($("nuId").value) body.officer_id=+$("nuId").value;
+  if(!body.name.trim()||!body.username.trim()||!body.password) throw new Error("Fill in the name, username and password.");
+  const r=await api("/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   if(!r.ok) throw new Error(await errText(r));
-  const j = await r.json(), L = j.layers;
-  if(!j.found){
-    $("traceOut").innerHTML = `<div class="clean"><b>No NISHAAN mark found</b>${esc(j.verdict)}<div class="small" style="margin-top:8px">Checked ${L.pages_checked} page(s).</div></div>`; return;
-  }
-  const pct = Math.round((L.pixel_confidence||0)*100);
-  $("traceOut").innerHTML = `
-    <div class="caught">
-      <div class="who">
-        <div class="lbl">Source identified</div>
-        <div class="nm">${esc(j.name)}</div>
-        <div class="num">officer #${pad(j.officer_id)} · ${esc(j.username)}</div>
-        <p style="margin:18px 0 0;font-size:14px;opacity:.92">${esc(j.verdict)}</p>
-      </div>
-      <div class="ev">
-        <dl class="kv">
-          <dt>Pixel mark</dt><dd>${L.pixel!=null?`#${pad(L.pixel)} &middot; ${L.pages_agreeing||1} of ${L.pages_checked} page(s) agree`:"not readable"}
-            ${L.pixel!=null?`<div class="meter"><span style="width:${pct}%"></span></div><span class="small mute">confidence ${pct}%</span>`:""}</dd>
-          <dt>Metadata tag</dt><dd>${L.metadata!=null?"#"+pad(L.metadata):'<span class="mute">not present (image, or stripped)</span>'}</dd>
-          <dt>Layers agree</dt><dd>${j.layers_agree?"yes":'<b style="color:var(--claret)">no, the file was edited</b>'}</dd>
-          <dt>Authorised?</dt><dd>${j.was_recipient?"yes, on the recipient list":'<b style="color:var(--claret)">NO, not a recipient</b>'}</dd>
-        </dl>
-        <div style="margin-top:14px;font:600 10px var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)">Ledger evidence</div>
-        ${j.ledger_blocks.length ? j.ledger_blocks.map(b=>`<div class="small" style="border-top:1px solid var(--rule-2);padding:6px 0">Block <b>#${b.index}</b> &middot; ${when(b.time)} &middot; ${b.valid_votes}/5 signatures &middot; <span class="mono">${short(b.block_hash,12)}</span></div>`).join("") : '<div class="small" style="color:var(--claret)">No signed opening by this officer is on record.</div>'}
-      </div>
-    </div>`;
+  const u=await r.json();
+  setFlash("success",`<b>Account created.</b> ${esc(u.name)} (officer #${pad(u.officer_id)}) can now sign in with username <span class="mono">${esc(u.username)}</span>. Their signing and encryption keys have been generated.`);
+  await vPeople();
+});}
+function setActive(btn,username,active){ return busy(btn,SPIN,async()=>{
+  const r=await api(`/users/${encodeURIComponent(username)}/active`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({active})});
+  if(!r.ok) throw new Error(await errText(r));
+  const u=await r.json();
+  setFlash(active?"success":"warn",`<b>${esc(u.name)}</b> has been ${active?"reactivated and can sign in again":"deactivated. They can no longer sign in or receive documents"}.`);
+  await vPeople();
 });}
 
-/* ---------------------------------------------------------------- audit */
-async function loadAudit(){
-  let ev = await (await api("/audit")).json();
-  if($("onlyBad").checked) ev = ev.filter(e=>["DENIED","LOGIN_FAILED","TAMPER"].includes(e.kind));
-  $("auditBody").innerHTML = ev.length ? `<table class="list"><thead><tr><th>Time</th><th>Event</th><th>Who</th><th>Document</th><th>Detail</th></tr></thead><tbody>${
-    ev.map(e=>`<tr><td class="small mono">${when(e.time)}</td><td><span class="tag ${esc(e.kind)}">${esc(e.kind.replace("_"," "))}</span></td><td class="small">${esc(e.username?nameOf(e.username):"")}</td><td class="mono small">${esc(e.doc_id||"")}</td><td class="small">${esc(e.detail)}</td></tr>`).join("")}</tbody></table>` : `<div class="empty">Nothing here yet.</div>`;
+/* ---------------------------------------------------------------- Audit */
+let AUDIT_FILTER="all";
+async function vAudit(){
+  await loadDocs();
+  const ev=await (await api("/audit")).json(), bad=["DENIED","LOGIN_FAILED","TAMPER"];
+  const shown=AUDIT_FILTER==="alerts"?ev.filter(e=>bad.includes(e.kind)):ev, nBad=ev.filter(e=>bad.includes(e.kind)).length;
+  const lc={DENIED:"red",LOGIN_FAILED:"red",TAMPER:"red",OPEN:"green",SHARE:"blue",RESTORE:"yellow",RESET:"yellow",NODE:"yellow",USER_ADDED:"blue",USER_DEACTIVATED:"yellow",USER_REACTIVATED:"blue"};
+  const nm={DENIED:"Access refused",LOGIN_FAILED:"Sign-in failed",TAMPER:"Record tampered",OPEN:"Document opened",SHARE:"Document shared",TRACE:"Leak traced",RESTORE:"Records restored",RESET:"Data reset",NODE:"Node changed",LOGIN:"Signed in",USER_ADDED:"Person added",USER_DEACTIVATED:"Account deactivated",USER_REACTIVATED:"Account reactivated"};
+  V().innerHTML=`<div class="pagehead"><h2>Audit log</h2>
+      <select class="form" style="width:auto" id="auditFilter" onchange="AUDIT_FILTER=this.value;vAudit()" aria-label="Filter"><option value="all" ${AUDIT_FILTER==="all"?"selected":""}>All events</option><option value="alerts" ${AUDIT_FILTER==="alerts"?"selected":""}>Refusals and alerts</option></select>
+      <button class="btn" onclick="vAudit()">Refresh</button></div>
+    <p class="sub">Every action is recorded, including refused attempts. ${nBad} alert${nBad===1?"":"s"} in total.</p>
+    <div class="box scroll">${shown.length?`<table class="t"><thead><tr><th>Event</th><th>User</th><th>Document</th><th>Details</th><th>Time</th></tr></thead><tbody>${
+      shown.map(e=>{ const d=DOCS.find(x=>x.doc_id===e.doc_id); return `<tr><td class="nowrap"><span class="label ${lc[e.kind]||""}">${esc(nm[e.kind]||e.kind)}</span></td>
+        <td class="nowrap">${e.username?`${avatar(e.username,20)} ${esc(user(e.username).name)}`:""}</td>
+        <td>${d?`<a href="#/doc/${d.doc_id}">${esc(d.title)}</a>`:(e.doc_id?`<span class="mono">${esc(e.doc_id)}</span>`:'<span class="muted">—</span>')}</td>
+        <td class="small">${esc(e.detail)}</td><td class="nowrap muted small">${when(e.time)}</td></tr>`; }).join("")}</tbody></table>`
+      :`<div class="empty"><span class="muted">No events match this filter.</span></div>`}</div>`;
 }
 
-/* ---------------------------------------------------------------- system */
-async function loadSystem(){
-  const h = await (await api("/health")).json();
-  const names = {file:"File encryption",key_split:"Key splitting",signatures:"Signatures",key_delivery:"Key delivery",hash:"Hashing / chain",passwords:"Password storage"};
-  $("algos").innerHTML = Object.entries(h.algorithms).map(([k,v])=>`<dt>${names[k]||k}</dt><dd>${esc(v)}</dd>`).join("") + `<dt>Version</dt><dd>NISHAAN ${esc(h.version)}</dd>`;
-  const {nodes} = await getNodes();
-  USERS = await (await api("/users")).json();
-  $("keysBody").innerHTML = `<table class="list"><thead><tr><th>Holder</th><th>ML-DSA-65 signing key</th><th>ML-KEM-768 key</th></tr></thead><tbody>${
-    USERS.map(u=>`<tr><td><b>${esc(u.name)}</b> <span class="mono mute">#${pad(u.officer_id)}</span></td><td class="mono">${esc(u.dsa_pub_fingerprint)}</td><td class="mono">${esc(u.kem_pub_fingerprint)}</td></tr>`).join("")}${
-    nodes.map(n=>`<tr><td><b>Ledger node ${n.name}</b></td><td class="mono">${esc(n.key_fingerprint)}</td><td class="mute">n/a</td></tr>`).join("")}</tbody></table>
-    <p class="small mute" style="margin-bottom:0">Fingerprint = first 16 hex characters of the SHA3-256 of the public key.</p>`;
+/* ---------------------------------------------------------------- Settings / Keys */
+async function vSettings(){
+  const h=await (await api("/health")).json(); USERS=await (await api("/users")).json(); await refreshNodes();
+  const names={file:"File encryption",key_split:"Key custody",signatures:"Signatures",key_delivery:"Key delivery",hash:"Ledger hashing",passwords:"Password storage"};
+  const admin=ME.role==="admin";
+  V().innerHTML=`<div class="narrow">
+    <h1 class="title">${admin?"Settings":"Keys"}</h1><p class="sub">Cryptographic configuration and the public-key fingerprints of every participant.</p>
+    <h3 class="sec">Cryptography</h3>
+    <div class="box"><div class="kv">${Object.entries(h.algorithms).map(([k,v])=>`<div>${esc(names[k]||k)}</div><div>${esc(v)}</div>`).join("")}<div>Version</div><div>NISHAAN ${esc(h.version)}</div></div></div>
+    <h3 class="sec" style="margin-top:32px">Public keys</h3>
+    <div class="box scroll"><table class="t"><thead><tr><th>Holder</th><th>ML-DSA-65 signing key</th><th>ML-KEM-768 key</th></tr></thead><tbody>
+      ${USERS.map(u=>`<tr><td class="nowrap">${avatar(u.username,20)} <b>${esc(u.name)}</b> <span class="muted">#${pad(u.officer_id)}</span>${u.username===ME.username?' <span class="label blue">You</span>':""}</td><td class="mono">${esc(u.dsa_pub_fingerprint)}</td><td class="mono">${esc(u.kem_pub_fingerprint)}</td></tr>`).join("")}
+      ${NODES.nodes.map(n=>`<tr><td class="nowrap">${ic("i-server","ic-muted")} <b>Ledger node ${n.name}</b></td><td class="mono">${esc(n.key_fingerprint)}</td><td class="muted">—</td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="small muted">A fingerprint is the first 16 hexadecimal characters of the SHA3-256 hash of the public key.</p>
+    ${admin?`<h3 class="sec" style="margin-top:32px;color:var(--danger)">Danger zone</h3>
+      <div class="dz"><div class="row"><div class="main"><b>Reset demonstration data</b><div class="meta">Permanently deletes all documents, ledger records and audit entries, and generates new keys for everyone.</div></div>
+      <div class="right"><button class="btn danger" id="resetBtn" onclick="doReset(this)">Reset data</button></div></div></div>`:""}
+  </div>`;
 }
 let resetArmed=false;
 function doReset(btn){
-  if(!resetArmed){ resetArmed=true; btn.textContent="Click again to confirm"; setTimeout(()=>{ resetArmed=false; btn.textContent="Reset demo data"; },4000); return; }
+  if(!resetArmed){ resetArmed=true; btn.textContent="Select again to confirm"; setTimeout(()=>{ resetArmed=false; if(document.body.contains(btn)&&!btn.disabled) btn.textContent="Reset data"; },5000); return; }
   resetArmed=false;
   return busy(btn,"Resetting…",async()=>{
-    const r = await api("/admin/reset",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
-    toast("Demo data wiped and fresh keys generated."); await loadSystem(); refreshNodeStrip();
+    const r=await api("/admin/reset",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
+    VERIFY=null; toast("Demonstration data has been reset"); await vSettings();
   });
 }
 
 /* ---------------------------------------------------------------- start */
 (async function start(){
-  try{
-    const r = await fetch(API+"/health"); if(!r.ok) throw 0;
-  }catch(_){ $("offline").classList.remove("hidden"); }
+  try{ const r=await fetch(API+"/health"); if(!r.ok) throw 0; }catch(_){ $("offline").classList.remove("hidden"); }
   let t=null; try{ t=sessionStorage.getItem("nishaan_token"); }catch(_){}
   if(t){
     TOKEN=t;
-    try{ const r = await fetch(API+"/me",{headers:{"Authorization":"Bearer "+t}}); if(r.ok){ ME=await r.json(); await enterApp(); return; } }catch(_){}
+    try{ const r=await fetch(API+"/me",{headers:{"Authorization":"Bearer "+t}}); if(r.ok){ ME=await r.json(); await enterApp(false); return; } }catch(_){}
     TOKEN=null; try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
   }
   $("lu").focus();

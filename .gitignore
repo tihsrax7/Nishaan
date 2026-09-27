@@ -5,3 +5,4 @@ backend/db.sqlite3
 backend/store/
 .env
 *.log
+.jwt_secret

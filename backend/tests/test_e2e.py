@@ -101,25 +101,25 @@ def main():
     r = login("admin")
     check("admin login works", r.status_code == 200 and r.json()["user"]["role"] == "admin")
     adm = r.json()["token"]
-    r = login("rao")
-    check("officer login works", r.status_code == 200 and r.json()["user"]["officer_id"] == 7)
+    r = login("officer1")
+    check("officer login works", r.status_code == 200 and r.json()["user"]["officer_id"] == 1)
     rao = r.json()["token"]
-    iyer = login("iyer").json()["token"]
-    bose = login("bose").json()["token"]
-    check("wrong password rejected", login("rao", "nope").status_code == 401)
+    iyer = login("officer2").json()["token"]
+    bose = login("officer3").json()["token"]
+    check("wrong password rejected", login("officer1", "nope").status_code == 401)
     check("unknown user rejected", login("ghost", "x").status_code == 401)
     for _ in range(5):
-        login("sharma", "wrong")
-    r = login("sharma")
+        login("officer4", "wrong")
+    r = login("officer4")
     check("account locks after 5 wrong passwords", r.status_code == 401 and "locked" in r.text, r.text)
     check("no token -> 401", requests.get(f"{API}/documents").status_code == 401)
     check("garbage token -> 401", requests.get(f"{API}/documents", headers=H("garbage")).status_code == 401)
     r = requests.get(f"{API}/users", headers=H(rao))
-    check("roster lists 6 users with key fingerprints",
-          r.status_code == 200 and len(r.json()) == 6 and all(u["dsa_pub_fingerprint"] for u in r.json()))
+    check("roster lists 11 users (admin + officer1-10) with key fingerprints",
+          r.status_code == 200 and len(r.json()) == 11 and all(u["dsa_pub_fingerprint"] for u in r.json()))
 
     # ---------------------------------------------------------------- roles
-    r = share(rao, T("colour.png"), ["rao"])
+    r = share(rao, T("colour.png"), ["officer1"])
     check("officer can NOT share documents (admin only)", r.status_code == 403)
     check("officer can NOT toggle nodes", requests.post(f"{API}/nodes/toggle", headers=H(rao),
                                                          json={"name": "N1", "online": False}).status_code == 403)
@@ -133,14 +133,14 @@ def main():
     check("share with no recipients rejected", share(adm, T("colour.png"), []).status_code == 400)
     check("share with unknown recipient rejected", share(adm, T("colour.png"), ["nobody"]).status_code == 400)
     open(T("junk.bin"), "wb").write(b"not a real file" * 10)
-    check("share of a non-image/non-PDF rejected", share(adm, T("junk.bin"), ["rao"]).status_code == 400)
+    check("share of a non-image/non-PDF rejected", share(adm, T("junk.bin"), ["officer1"]).status_code == 400)
 
     # ---------------------------------------------------------------- image: share -> open -> trace
-    r = share(adm, T("colour.png"), ["rao", "iyer"], title="Harbour photo", cls="SECRET", mime="image/png")
+    r = share(adm, T("colour.png"), ["officer1", "officer2"], title="Harbour photo", cls="SECRET", mime="image/png")
     check("admin shares an image to rao + iyer", r.status_code == 200, r.text)
     img_id = r.json()["doc_id"]
     check("share stores recipients + classification",
-          r.json()["recipients"] == ["iyer", "rao"] and r.json()["classification"] == "SECRET")
+          r.json()["recipients"] == ["officer1", "officer2"] and r.json()["classification"] == "SECRET")
 
     docs_rao = requests.get(f"{API}/documents", headers=H(rao)).json()
     docs_bose = requests.get(f"{API}/documents", headers=H(bose)).json()
@@ -159,40 +159,44 @@ def main():
     check("rao opens the image (4/5 quorum)", r.status_code == 200, r.text[:200])
     check("open is fast (< 3 s)", t_open < 3, f"{t_open:.1f}s")
     m = meta_of(r)
-    check("meta: officer 7, 4 valid votes, N5 offline",
-          m["officer_id"] == 7 and m["valid_votes"] == 4 and m["votes"]["N5"] == "offline", m)
+    check("meta: officer 1, 4 valid votes, N5 offline",
+          m["officer_id"] == 1 and m["valid_votes"] == 4 and m["votes"]["N5"] == "offline", m)
     check("meta: key was delivered via ML-KEM-768 (1088-byte ciphertext)", m["kem_ciphertext_bytes"] == 1088)
-    check("meta: download filename names the copy", m["filename"].endswith("__copy-07.png"), m["filename"])
+    check("meta: download filename names the copy", m["filename"].endswith("__copy-01.png"), m["filename"])
     open(T("rao.png"), "wb").write(r.content)
 
     opened = cv2.imread(T("rao.png"), cv2.IMREAD_COLOR)
     orig = cv2.imread(T("colour.png"), cv2.IMREAD_COLOR)
     check("opened image keeps its colour", opened is not None and
           np.abs(opened[:, :, 0].astype(int) - opened[:, :, 2].astype(int)).mean() > 20)
-    check("opened image looks identical (tiny change only)", np.abs(opened.astype(int) - orig.astype(int)).mean() < 2)
+    body = slice(0, int(opened.shape[0] * 0.9))
+    check("opened image still looks like the original (body changed only slightly)",
+          np.abs(opened[body].astype(int) - orig[body].astype(int)).mean() < 8)
+    foot = opened[-8:, :].astype(int).mean()
+    check("opened image carries a VISIBLE footer watermark band", foot < 70 and np.abs(opened[-8:].astype(int) - orig[-8:].astype(int)).mean() > 40, foot)
 
     r = trace(adm, img_id, T("rao.png"))
     j = r.json()
-    check("trace names rao (#07)", r.status_code == 200 and j["found"] and j["officer_id"] == 7, j)
+    check("trace names rao (#01)", r.status_code == 200 and j["found"] and j["officer_id"] == 1, j)
     check("trace has high confidence", j["layers"]["pixel_confidence"] > 0.8, j["layers"])
     check("trace links to rao's ledger block", len(j["ledger_blocks"]) == 1 and j["was_recipient"])
 
     small = cv2.resize(opened, (opened.shape[1] // 2, opened.shape[0] // 2))
     cv2.imwrite(T("leak_small.jpg"), small, [cv2.IMWRITE_JPEG_QUALITY, 75])
     j = trace(adm, img_id, T("leak_small.jpg")).json()
-    check("trace survives shrink-to-half + JPEG-75", j.get("officer_id") == 7, j)
+    check("trace survives shrink-to-half + JPEG-75", j.get("officer_id") == 1, j)
 
     r = requests.post(f"{API}/open/{img_id}", headers=H(iyer))
     open(T("iyer.png"), "wb").write(r.content)
     j = trace(adm, img_id, T("iyer.png")).json()
-    check("iyer's copy traces to iyer (#11), not rao", j.get("officer_id") == 11, j)
+    check("iyer's copy traces to iyer (#02), not rao", j.get("officer_id") == 2, j)
 
     j = trace(adm, img_id, T("colour.png")).json()
     check("the unmarked original is NOT blamed on anyone", j["found"] is False, j)
     check("officer can NOT run a trace", trace(rao, img_id, T("rao.png")).status_code == 403)
 
     # ---------------------------------------------------------------- PDF
-    r = share(adm, T("sample.pdf"), ["rao"], title="Movement order", cls="TOP SECRET", mime="application/pdf")
+    r = share(adm, T("sample.pdf"), ["officer1"], title="Movement order", cls="TOP SECRET", mime="application/pdf")
     check("admin shares a 2-page PDF", r.status_code == 200 and r.json()["pages"] == 2, r.text)
     pdf_id = r.json()["doc_id"]
     r = requests.post(f"{API}/open/{pdf_id}", headers=H(rao))
@@ -201,18 +205,20 @@ def main():
     pd = pymupdf.open(T("rao.pdf"))
     check("opened PDF has 2 pages + our title", len(pd) == 2 and pd.metadata["title"] == "Movement order")
     px = pd[0].get_pixmap(clip=pymupdf.Rect(10, 720, 60, 780)).pixel(10, 10)
-    check("opened PDF keeps colour (red band still red)", px[0] > 150 and px[1] < 90 and px[2] < 90, px)
+    check("opened PDF keeps colour (red band still red)", px[0] > 150 and px[1] < 100 and px[2] < 100, px)
+    fp = pd[0].get_pixmap(clip=pymupdf.Rect(0, 796, 620, 800)).pixel(300, 1)
+    check("opened PDF pages carry a VISIBLE footer watermark band", sum(fp) < 200, fp)
     pd.close()
     j = trace(adm, pdf_id, T("rao.pdf"), "application/pdf").json()
-    check("PDF trace: both layers name rao", j.get("officer_id") == 7 and j["layers"]["metadata"] == 7
-          and j["layers"]["pixel"] == 7 and j["layers_agree"], j)
+    check("PDF trace: both layers name rao", j.get("officer_id") == 1 and j["layers"]["metadata"] == 1
+          and j["layers"]["pixel"] == 1 and j["layers_agree"], j)
 
     # a single page screenshotted and saved as a JPEG
     pg = pymupdf.open(T("rao.pdf"))[1].get_pixmap(dpi=150)
     rgb = np.frombuffer(pg.samples, np.uint8).reshape(pg.height, pg.width, pg.n)[:, :, :3]
     cv2.imwrite(T("page2.jpg"), cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 85])
     j = trace(adm, pdf_id, T("page2.jpg")).json()
-    check("PDF trace from a single-page JPEG screenshot", j.get("officer_id") == 7, j)
+    check("PDF trace from a single-page JPEG screenshot", j.get("officer_id") == 1, j)
 
     # metadata stripped -> pixel layer still works
     pd = pymupdf.open(T("rao.pdf"))
@@ -221,10 +227,10 @@ def main():
     pd.close()
     j = trace(adm, pdf_id, T("stripped.pdf"), "application/pdf").json()
     check("PDF trace survives stripped metadata (pixel layer)",
-          j.get("officer_id") == 7 and j["layers"]["metadata"] is None, j)
+          j.get("officer_id") == 1 and j["layers"]["metadata"] is None, j)
 
     make_sample_pdf(T("big.pdf"), 30)
-    big_id = share(adm, T("big.pdf"), ["rao"], mime="application/pdf").json()["doc_id"]
+    big_id = share(adm, T("big.pdf"), ["officer1"], mime="application/pdf").json()["doc_id"]
     t0 = time.time()
     r = requests.post(f"{API}/open/{big_id}", headers=H(rao))
     t_big = time.time() - t0
@@ -253,17 +259,49 @@ def main():
 
     r = requests.post(f"{API}/ledger/tamper", headers=H(rao), json={"index": 2})
     check("officer can NOT tamper", r.status_code == 403)
-    r = requests.post(f"{API}/ledger/tamper", headers=H(adm), json={"index": 2, "mode": "edit", "username": "bose"})
+    r = requests.post(f"{API}/ledger/tamper", headers=H(adm), json={"index": 2, "mode": "edit", "username": "officer3"})
     v = r.json()["verify"]
     bad = [b["index"] for b in v["blocks"] if not b["ok"]]
     check("editing block #2 is detected at block #2", not v["ok"] and bad == [2], v)
     requests.post(f"{API}/ledger/restore", headers=H(adm))
-    r = requests.post(f"{API}/ledger/tamper", headers=H(adm), json={"index": 2, "mode": "rehash", "username": "bose"})
+    r = requests.post(f"{API}/ledger/tamper", headers=H(adm), json={"index": 2, "mode": "rehash", "username": "officer3"})
     v = r.json()["verify"]
     bad = [b["index"] for b in v["blocks"] if not b["ok"]]
     check("edit + recomputed hash is STILL caught (votes + next link break)", not v["ok"] and 2 in bad and 3 in bad, v)
     v = requests.post(f"{API}/ledger/restore", headers=H(adm)).json()
     check("restore makes the chain verify clean again", v["ok"], v)
+
+    # ---------------------------------------------------------------- people management
+    r = requests.post(f"{API}/users", headers=H(rao), json={"username": "nair", "name": "Lt. Priya Nair", "password": "nair123"})
+    check("officer can NOT add people", r.status_code == 403)
+    r = requests.post(f"{API}/users", headers=H(adm), json={"username": "nair", "name": "Lt. Priya Nair", "password": "nair123"})
+    check("admin adds a new officer", r.status_code == 200 and r.json()["officer_id"] == 11 and r.json()["active"], r.text)
+    check("new officer is issued their own keys", len(r.json().get("dsa_pub_fingerprint", "")) == 16)
+    r = requests.post(f"{API}/users", headers=H(adm), json={"username": "nair", "name": "Someone", "password": "xxxxxx"})
+    check("duplicate username rejected", r.status_code == 400)
+    r = requests.post(f"{API}/users", headers=H(adm), json={"username": "Bad Name!", "name": "X Y", "password": "xxxxxx"})
+    check("invalid username rejected", r.status_code == 400)
+    r = requests.post(f"{API}/users", headers=H(adm), json={"username": "shortpw", "name": "X Y", "password": "123"})
+    check("too-short password rejected", r.status_code == 400)
+    r = login("nair")
+    check("new officer can sign in", r.status_code == 200 and r.json()["user"]["name"] == "Lt. Priya Nair")
+    nair = r.json()["token"]
+    nid = share(adm, T("colour.png"), ["nair"], title="For Nair", mime="image/png").json()["doc_id"]
+    r = requests.post(f"{API}/open/{nid}", headers=H(nair))
+    check("new officer opens a document shared with them", r.status_code == 200 and meta_of(r)["name"] == "Lt. Priya Nair")
+    open(T("nair.png"), "wb").write(r.content)
+    j = trace(adm, nid, T("nair.png")).json()
+    check("new officer's copy traces back to them (#11)", j.get("officer_id") == 11 and j.get("username") == "nair", j)
+    r = requests.post(f"{API}/users/nair/active", headers=H(adm), json={"active": False})
+    check("admin deactivates the officer", r.status_code == 200 and r.json()["active"] is False)
+    check("deactivated officer can no longer sign in", login("nair").status_code == 401)
+    check("deactivated officer's existing session is cut off", requests.get(f"{API}/documents", headers=H(nair)).status_code == 401)
+    check("deactivated officer can't be a recipient", share(adm, T("colour.png"), ["nair"]).status_code == 400)
+    check("admin account can't be deactivated", requests.post(f"{API}/users/admin/active", headers=H(adm), json={"active": False}).status_code == 400)
+    v = requests.get(f"{API}/ledger/verify", headers=H(adm)).json()
+    check("ledger still verifies after deactivation (history kept)", v["ok"], v)
+    requests.post(f"{API}/users/nair/active", headers=H(adm), json={"active": True})
+    check("reactivated officer can sign in again", login("nair").status_code == 200)
 
     # ---------------------------------------------------------------- audit
     ev = requests.get(f"{API}/audit", headers=H(adm)).json()
@@ -271,7 +309,7 @@ def main():
     check("audit log records LOGIN, LOGIN_FAILED, SHARE, OPEN, DENIED, TRACE, TAMPER",
           {"LOGIN", "SHARE", "OPEN", "DENIED", "TRACE", "TAMPER", "LOGIN_FAILED"} <= kinds, kinds)
     check("audit log records bose's refused attempt",
-          any(e["kind"] == "DENIED" and e["username"] == "bose" and e["doc_id"] == img_id for e in ev))
+          any(e["kind"] == "DENIED" and e["username"] == "officer3" and e["doc_id"] == img_id for e in ev))
 
     # ---------------------------------------------------------------- restart survival is checked by run_10x.py
     print()

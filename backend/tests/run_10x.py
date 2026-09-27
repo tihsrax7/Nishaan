@@ -43,16 +43,16 @@ def stop(p):
 def restart_checks():
     fails = []
     adm = requests.post(API + "/login", json={"username": "admin", "password": "admin123"}).json()["token"]
-    rao = requests.post(API + "/login", json={"username": "rao", "password": "rao123"}).json()["token"]
+    rao = requests.post(API + "/login", json={"username": "officer1", "password": "officer1123"}).json()["token"]
     v = requests.get(API + "/ledger/verify", headers={"Authorization": "Bearer " + rao}).json()
-    if not (v["ok"] and v["checked"] == 5):
+    if not (v["ok"] and v["checked"] == 6):
         fails.append("ledger no longer verifies after restart")
     docs = requests.get(API + "/documents", headers={"Authorization": "Bearer " + rao}).json()
     r = requests.post(API + f"/open/{docs[-1]['doc_id']}", headers={"Authorization": "Bearer " + rao})
     if r.status_code != 200:
         fails.append(f"old document can't be opened after restart ({r.status_code})")
     v = requests.get(API + "/ledger/verify", headers={"Authorization": "Bearer " + adm}).json()
-    if not (v["ok"] and v["checked"] == 6):
+    if not (v["ok"] and v["checked"] == 7):
         fails.append("new block after restart doesn't chain onto the old ones")
     return fails
 
@@ -60,22 +60,39 @@ def restart_checks():
 results = []
 for i in range(1, 11):
     tmp = tempfile.mkdtemp(prefix="nishaan_run_")
-    env = dict(os.environ, NISHAAN_DB=os.path.join(tmp, "test.db"), NISHAAN_STORE=os.path.join(tmp, "store"))
+    env = dict(os.environ, NISHAAN_DB=os.path.join(tmp, "test.db"), NISHAAN_STORE=os.path.join(tmp, "store"),
+               NISHAAN_SECRET_FILE=os.path.join(tmp, "jwt_secret"))
     p = start(env)
-    r = subprocess.run([sys.executable, "tests/test_e2e.py"], cwd=BACKEND, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, "tests/test_e2e.py"], cwd=BACKEND, capture_output=True, text=True, env=env)
     stop(p)
     lines = r.stdout.strip().splitlines()
+
+    # security suite on its own fresh database
+    for f in ("test.db",):
+        os.remove(os.path.join(tmp, f))
+    shutil.rmtree(os.path.join(tmp, "store"), ignore_errors=True)
+    p = start(env)
+    rs = subprocess.run([sys.executable, "tests/test_security.py"], cwd=BACKEND, capture_output=True, text=True, env=env)
+    stop(p)
+    sec_lines = rs.stdout.strip().splitlines()
+    n_sec = sum(l.startswith("PASS") for l in sec_lines)
+    # restart checks need the e2e data, so re-run e2e quickly on a fresh db
+    os.remove(os.path.join(tmp, "test.db"))
+    shutil.rmtree(os.path.join(tmp, "store"), ignore_errors=True)
+    p = start(env)
+    subprocess.run([sys.executable, "tests/test_e2e.py"], cwd=BACKEND, capture_output=True, text=True, env=env)
+    stop(p)
     n_pass = sum(l.startswith("PASS") for l in lines)
-    fails = [l for l in lines if l.startswith("FAIL")]
+    fails = [l for l in lines + sec_lines if l.startswith("FAIL")]
 
     p = start(env)                      # same data, fresh process = a real restart
     fails += ["FAIL - " + f for f in restart_checks()]
     stop(p)
     shutil.rmtree(tmp, ignore_errors=True)
 
-    ok = r.returncode == 0 and not fails
+    ok = r.returncode == 0 and rs.returncode == 0 and not fails
     results.append(ok)
-    print(f"run {i:2d}: {'PASS' if ok else 'FAIL'}  ({n_pass} checks passed + restart checks)")
+    print(f"run {i:2d}: {'PASS' if ok else 'FAIL'}  ({n_pass} feature checks + {n_sec} security checks + restart checks)")
     for f in fails:
         print("        " + f)
 
