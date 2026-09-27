@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NISHAAN Console</title>
+<!-- OWNER: Person D + E (frontend). Single self-contained file: no internet needed,
+     no libraries. Served by the backend at http://localhost:8000/ -->
+<style>
+:root{
+  --paper:#ECE7DB; --paper-2:#F5F1E8; --card:#FBF9F4; --ink:#121B1A; --ink-2:#3D4847; --mute:#6F7775;
+  --rule:#C8C0AE; --rule-2:#DCD5C5; --teal:#0B6B72; --teal-d:#07474C; --teal-l:#D5E7E6;
+  --claret:#8C1D40; --claret-l:#F1DCE2; --ok:#2C7A4B; --ok-l:#DCEFE3; --warn:#A8660B; --warn-l:#F6E7CF;
+  --head:"Bahnschrift","DIN Alternate","DIN Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","Consolas","SFMono-Regular",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body)}
+body{min-height:100vh;display:flex;flex-direction:column}
+button,input,select{font:inherit;color:inherit}
+.hidden{display:none!important}
+.mono{font-family:var(--mono);font-size:.86em;letter-spacing:0}
+.mute{color:var(--mute)}
+.small{font-size:.84rem}
+a{color:var(--teal-d)}
+
+/* classification banners, like the strip on real classified paper */
+.banner{background:var(--claret);color:#fff;text-align:center;font:600 11px/1 var(--head);letter-spacing:.35em;padding:5px 0;text-transform:uppercase}
+
+/* ---------- login ---------- */
+#login{flex:1;display:grid;grid-template-columns:1.15fr 1fr;min-height:calc(100vh - 42px)}
+.intro{background:var(--teal-d);color:#E9F2F1;padding:56px 56px 40px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.intro:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.05) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(255,255,255,.05) 31px 32px);pointer-events:none}
+.wordmark{font:700 64px/0.9 var(--head);letter-spacing:.06em;margin:0}
+.wordmark small{display:block;font:400 22px/1.2 var(--body);letter-spacing:.02em;opacity:.75;margin-top:10px}
+.tagline{font:400 28px/1.25 var(--head);max-width:520px;margin:34px 0 30px;color:#fff}
+.tagline b{color:#F3C4D1;font-weight:600}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:0;max-width:540px;border-top:1px solid rgba(255,255,255,.2)}
+.steps li{display:grid;grid-template-columns:44px 1fr;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.2)}
+.steps b{font:600 13px/1.6 var(--mono);color:#9FD0CD}
+.intro .foot{margin-top:auto;padding-top:28px;font:12px var(--mono);opacity:.6;letter-spacing:.04em}
+.loginpane{padding:56px 48px;display:flex;flex-direction:column;justify-content:center;max-width:560px}
+.loginpane h2{font:600 26px var(--head);letter-spacing:.04em;margin:0 0 4px;text-transform:uppercase}
+label{display:block;font:600 11px var(--head);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:16px 0 6px}
+input[type=text],input[type=password],select,input:not([type]){width:100%;background:var(--card);border:1px solid var(--rule);border-bottom:2px solid var(--ink);padding:10px 12px;outline:none;border-radius:0}
+input:focus,select:focus{border-color:var(--teal);border-bottom-color:var(--teal);background:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:0;padding:11px 20px;font:600 13px var(--head);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border-radius:0}
+.btn:hover{background:var(--teal-d)}
+.btn.teal{background:var(--teal)} .btn.teal:hover{background:var(--teal-d)}
+.btn.claret{background:var(--claret)} .btn.claret:hover{background:#6c1531}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)} .btn.ghost:hover{background:var(--ink);color:#fff}
+.btn.sm{padding:6px 12px;font-size:11px}
+.btn[disabled]{opacity:.55;cursor:progress}
+a.btn{text-decoration:none}
+.acct{width:100%;border-collapse:collapse;margin-top:26px;font-size:13px}
+.acct caption{text-align:left;font:600 11px var(--head);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding-bottom:6px}
+.acct td{border-top:1px solid var(--rule-2);padding:7px 6px}
+.acct tr{cursor:pointer} .acct tr:hover td{background:var(--paper-2)}
+.acct td:last-child{text-align:right;color:var(--mute)}
+.err{color:var(--claret);min-height:22px;margin-top:10px;font-size:14px}
+
+/* ---------- app shell ---------- */
+#app{flex:1;display:grid;grid-template-columns:238px minmax(0,1fr);min-height:calc(100vh - 42px)}
+.rail{background:var(--ink);color:#C9D1D0;display:flex;flex-direction:column}
+.rail .brand{padding:22px 22px 18px;border-bottom:1px solid #2A3534}
+.rail .brand b{display:block;color:#fff;font:700 26px/1 var(--head);letter-spacing:.08em}
+.rail .brand span{font-size:12px;opacity:.6}
+.nav{list-style:none;margin:10px 0;padding:0}
+.nav button{width:100%;background:none;border:0;border-left:3px solid transparent;text-align:left;padding:11px 19px;cursor:pointer;display:grid;grid-template-columns:30px 1fr;color:#C9D1D0;font:500 13px var(--head);letter-spacing:.12em;text-transform:uppercase}
+.nav button i{font:normal 11px var(--mono);color:#6E8583;padding-top:2px}
+.nav button:hover{background:#1C2726;color:#fff}
+.nav button.on{border-left-color:#5FB3AE;background:#1C2726;color:#fff}
+.nav button.on i{color:#5FB3AE}
+.rail .who{margin-top:auto;padding:16px 20px;border-top:1px solid #2A3534;font-size:13px}
+.rail .who b{color:#fff;display:block}
+.rail .who .role{font:600 10px var(--head);letter-spacing:.18em;text-transform:uppercase;color:#5FB3AE}
+.rail .who button{margin-top:10px;background:none;border:1px solid #435150;color:#C9D1D0;padding:5px 10px;font:600 10px var(--head);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.rail .who button:hover{border-color:#fff;color:#fff}
+main{padding:0 0 60px;min-width:0}
+.topbar{display:flex;align-items:center;gap:18px;padding:14px 34px;border-bottom:1px solid var(--rule);background:var(--paper-2);flex-wrap:wrap}
+.topbar h1{font:600 22px var(--head);letter-spacing:.06em;text-transform:uppercase;margin:0;flex:1;min-width:200px}
+.topbar h1 i{font:normal 13px var(--mono);color:var(--mute);margin-right:10px}
+.nodestrip{display:flex;align-items:center;gap:4px;font:11px var(--mono);color:var(--ink-2)}
+.nodestrip s{display:inline-block;width:12px;height:12px;background:var(--rule);text-decoration:none}
+.nodestrip s.up{background:var(--ok)}
+.nodestrip em{font-style:normal;margin-left:6px}
+.section{padding:26px 34px;max-width:1180px}
+.lede{max-width:760px;color:var(--ink-2);margin:0 0 22px}
+
+/* panels: flat sheets with a folder-tab heading, no rounded corners */
+.sheet{background:var(--card);border:1px solid var(--rule);margin:34px 0 22px;position:relative}
+.sheet>.tab{position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--card);border:1px solid var(--rule);border-bottom:0;padding:5px 12px 3px;font:600 10px var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.sheet .inner{padding:20px 22px;overflow-x:auto}
+.sheet+.sheet{margin-top:44px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+.drop{border:1.5px dashed var(--ink-2);background:var(--paper-2);padding:26px;text-align:center;cursor:pointer;transition:background .15s}
+.drop:hover,.drop.over{background:var(--teal-l);border-color:var(--teal)}
+.drop b{font:600 14px var(--head);letter-spacing:.1em;text-transform:uppercase;display:block}
+.drop .fname{font:13px var(--mono);color:var(--teal-d);margin-top:6px;word-break:break-all}
+.recips{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0;border:1px solid var(--rule);border-bottom:0;border-right:0}
+.recips label{margin:0;display:flex;gap:10px;align-items:center;padding:10px 12px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);font:14px var(--body);letter-spacing:0;text-transform:none;color:var(--ink);cursor:pointer;background:var(--card)}
+.recips label:has(input:checked){background:var(--teal-l)}
+.recips input{accent-color:var(--teal);width:16px;height:16px}
+.recips .id{margin-left:auto;font:12px var(--mono);color:var(--mute)}
+
+/* classification stamp */
+.stamp{display:inline-block;border:2px solid currentColor;padding:1px 7px;font:700 11px var(--head);letter-spacing:.16em;text-transform:uppercase;transform:rotate(-2deg);white-space:nowrap}
+.stamp.RESTRICTED{color:var(--warn)} .stamp.CONFIDENTIAL{color:var(--teal)} .stamp.SECRET{color:var(--claret)}
+.stamp.TOP{color:#fff;background:var(--claret);border-color:var(--claret)}
+.stamp.big{font-size:20px;padding:4px 14px;border-width:3px}
+
+table.list{width:100%;border-collapse:collapse;font-size:14px}
+table.list th{text-align:left;font:600 10px var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);border-bottom:2px solid var(--ink);padding:8px 10px}
+table.list td{border-bottom:1px solid var(--rule-2);padding:10px;vertical-align:top}
+table.list tr:hover td{background:var(--paper-2)}
+.idchip{font:12px var(--mono);background:var(--paper);border:1px solid var(--rule);padding:2px 6px;cursor:pointer;white-space:nowrap}
+.idchip:hover{border-color:var(--teal);color:var(--teal-d)}
+.empty{padding:28px;text-align:center;color:var(--mute);border:1px dashed var(--rule)}
+
+/* sealed result + share split */
+.sealed{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+.split{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.split div{border:1px solid var(--rule);padding:8px;font:11px var(--mono);text-align:center;background:var(--paper-2)}
+.split div b{display:block;font:600 13px var(--head);letter-spacing:.08em}
+
+/* nodes */
+.nodes{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.node{border:1px solid var(--rule);background:var(--card);padding:14px 12px;position:relative;min-height:128px}
+.node .nm{font:700 22px var(--head);letter-spacing:.06em}
+.node .st{font:600 10px var(--head);letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
+.node .fp{font:10.5px var(--mono);color:var(--mute);margin-top:10px;word-break:break-all}
+.node.up{border-top:4px solid var(--ok)} .node.up .st{color:var(--ok)}
+.node.down{border-top:4px solid var(--rule);background:var(--paper-2)} .node.down .st{color:var(--mute)} .node.down .nm{color:var(--mute)}
+.node.signed{border-top-color:var(--ok);background:var(--ok-l)}
+.node.rejected{border-top:4px solid var(--claret);background:var(--claret-l)}
+.node.working{border-top:4px solid var(--warn)}
+.node.working .st{color:var(--warn)}
+.node .act{margin-top:10px}
+#voteNodes .node{min-height:0;padding:10px 12px}
+#voteNodes .node .nm{font-size:18px}
+.quorum{display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap}
+.qbar{display:grid;grid-template-columns:repeat(5,34px);gap:3px;position:relative}
+.qbar span{height:14px;background:var(--rule-2)} .qbar span.on{background:var(--ok)}
+.qbar:after{content:"";position:absolute;left:calc(4*37px - 3px);top:-6px;bottom:-6px;border-left:2px dashed var(--ink)}
+.verdict{font:600 13px var(--head);letter-spacing:.14em;text-transform:uppercase;padding:4px 10px}
+.verdict.go{background:var(--ok);color:#fff} .verdict.stop{background:var(--claret);color:#fff}
+
+/* reader */
+.pipeline{list-style:none;margin:16px 0 0;padding:0;border-left:2px solid var(--rule)}
+.pipeline li{padding:6px 0 6px 18px;position:relative;font-size:14px;color:var(--mute)}
+.pipeline li:before{content:"";position:absolute;left:-8px;top:10px;width:12px;height:12px;background:var(--paper);border:2px solid var(--rule)}
+.pipeline li.done{color:var(--ink)} .pipeline li.done:before{background:var(--ok);border-color:var(--ok)}
+.pipeline li.fail{color:var(--claret)} .pipeline li.fail:before{background:var(--claret);border-color:var(--claret)}
+.pipeline li .mono{color:var(--ink-2)}
+.docframe{border:1px solid var(--ink);background:#fff;min-height:200px;display:flex;justify-content:center;align-items:flex-start;position:relative}
+.docframe img{max-width:100%;display:block}
+.docframe iframe{width:100%;height:78vh;border:0}
+.copyline{display:flex;justify-content:space-between;gap:10px;background:var(--ink);color:#fff;padding:8px 14px;font:12px var(--mono);flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 14px;font-size:13.5px}
+.kv dt{font:600 10px/2 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.kv dd{margin:0;word-break:break-all}
+
+/* ledger chain */
+.chain{position:relative}
+.blk{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:0;border:1px solid var(--rule);background:var(--card);position:relative;margin-bottom:26px}
+.blk:not(:last-child):after{content:"";position:absolute;left:38px;bottom:-27px;height:26px;border-left:2px solid var(--ink)}
+.blk .ix{background:var(--ink);color:#fff;font:700 24px var(--head);display:flex;flex-direction:column;align-items:center;justify-content:center;letter-spacing:.04em}
+.blk .ix small{font:600 9px var(--head);letter-spacing:.2em;opacity:.6}
+.blk .body{padding:12px 16px;min-width:0}
+.blk .body .t{font:600 16px var(--head);letter-spacing:.04em}
+.blk .hashes{font:11.5px var(--mono);color:var(--ink-2);margin-top:6px;display:grid;grid-template-columns:86px minmax(0,1fr);gap:1px 8px}
+.blk .hashes span{color:var(--mute)}
+.blk .hashes code{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk .side{padding:12px 16px;border-left:1px dashed var(--rule);display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:170px}
+.pips{display:flex;gap:3px} .pips s{width:20px;height:8px;background:var(--rule-2)} .pips s.on{background:var(--ok)}
+.blk.bad{border-color:var(--claret);background:var(--claret-l)}
+.blk.bad .ix{background:var(--claret)}
+.vstamp{font:700 11px var(--head);letter-spacing:.16em;padding:2px 8px;border:2px solid;text-transform:uppercase;align-self:flex-start;transform:rotate(-3deg)}
+.vstamp.ok{color:var(--ok)} .vstamp.bad{color:var(--claret)}
+.problems{margin:8px 0 0;padding-left:18px;color:var(--claret);font-size:13px}
+.banner-state{padding:12px 16px;font:600 14px var(--head);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;display:flex;gap:10px;align-items:center}
+.banner-state.ok{background:var(--ok-l);color:var(--ok);border-left:5px solid var(--ok)}
+.banner-state.bad{background:var(--claret-l);color:var(--claret);border-left:5px solid var(--claret)}
+
+/* trace result */
+.caught{display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--claret);background:#fff}
+.caught .who{padding:26px;background:var(--claret);color:#fff}
+.caught .who .lbl{font:600 11px var(--head);letter-spacing:.24em;text-transform:uppercase;opacity:.8}
+.caught .who .nm{font:700 38px/1.05 var(--head);letter-spacing:.02em;margin:10px 0 4px}
+.caught .who .num{font:22px var(--mono);opacity:.9}
+.caught .ev{padding:22px 26px}
+.meter{height:10px;background:var(--rule-2);margin:6px 0 2px}
+.meter span{display:block;height:100%;background:var(--claret)}
+.clean{border:2px solid var(--ok);background:var(--ok-l);padding:22px;color:var(--ok)}
+.clean b{font:700 22px var(--head);letter-spacing:.06em;text-transform:uppercase;display:block}
+
+/* audit */
+.tag{font:600 10px var(--head);letter-spacing:.14em;padding:2px 7px;text-transform:uppercase;white-space:nowrap;border:1px solid var(--rule);color:var(--ink-2)}
+.tag.DENIED,.tag.TAMPER,.tag.LOGIN_FAILED{background:var(--claret);color:#fff;border-color:var(--claret)}
+.tag.OPEN{background:var(--ok);color:#fff;border-color:var(--ok)}
+.tag.SHARE{background:var(--teal);color:#fff;border-color:var(--teal)}
+.tag.TRACE{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag.RESTORE,.tag.RESET,.tag.NODE{background:var(--warn-l);color:var(--warn);border-color:var(--warn)}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;max-width:min(640px,92vw);font-size:14px;z-index:50;border-left:5px solid var(--teal);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#toast.bad{border-left-color:#E5718F}
+#offline{background:var(--warn);color:#fff;text-align:center;padding:8px;font-size:14px}
+
+@media (max-width:900px){
+  #login{grid-template-columns:1fr} .intro{padding:34px 22px} .wordmark{font-size:46px} .tagline{font-size:22px}
+  .loginpane{padding:28px 22px}
+  #app{grid-template-columns:minmax(0,1fr)} .rail{flex-direction:row;flex-wrap:wrap;align-items:center;min-width:0}
+  .banner{letter-spacing:.14em;font-size:10px;padding:5px 8px}
+  .rail .brand{border:0;padding:12px 16px} .nav{display:flex;overflow-x:auto;margin:0;width:100%;min-width:0;order:3}
+  .nav button{white-space:nowrap;border-left:0;border-bottom:3px solid transparent;grid-template-columns:auto auto;gap:6px;padding:10px 14px}
+  .nav button.on{border-bottom-color:#5FB3AE}
+  .rail .who{margin:0 0 0 auto;border:0;padding:10px 16px}
+  .section,.topbar{padding-left:16px;padding-right:16px}
+  .grid2,.caught,.sealed{grid-template-columns:1fr}
+  .nodes,.split{grid-template-columns:repeat(3,1fr)}
+  .blk{grid-template-columns:54px minmax(0,1fr)} .blk .side{grid-column:1/-1;border-left:0;border-top:1px dashed var(--rule)}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="banner">Restricted &nbsp;//&nbsp; NISHAAN demonstration system &nbsp;//&nbsp; sample data only</div>
+<div id="offline" class="hidden">Can't reach the NISHAAN server. Make sure the black terminal window is still running, then press F5.</div>
+
+<!-- ================================================================= LOGIN -->
+<section id="login">
+  <div class="intro">
+    <h1 class="wordmark">NISHAAN<small>निशान &nbsp;·&nbsp; the mark</small></h1>
+    <p class="tagline">Every copy carries <b>its reader's mark</b>. Every opening is <b>signed, voted on and chained</b>.</p>
+    <ol class="steps">
+      <li><b>01</b><span>A document is encrypted once and its key is split across five ledger nodes, so no single server holds it.</span></li>
+      <li><b>02</b><span>An officer signs a post-quantum receipt to open it. Four of five nodes must verify and co-sign.</span></li>
+      <li><b>03</b><span>The copy they receive carries an invisible mark unique to them, in every page.</span></li>
+      <li><b>04</b><span>If it leaks, the mark names the officer, and the ledger shows when they opened it.</span></li>
+    </ol>
+    <div class="foot">ML-KEM-768 · ML-DSA-65 · AES-256-GCM · Shamir 3-of-5 · SHA3-256</div>
+  </div>
+  <div class="loginpane">
+    <h2>Sign in</h2>
+    <p class="mute small" style="margin:0">Use one of the demo accounts below.</p>
+    <label for="lu">Username</label>
+    <input id="lu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false">
+    <label for="lp">Password</label>
+    <input id="lp" type="password" autocomplete="current-password">
+    <div style="margin-top:18px"><button class="btn teal" id="loginBtn" onclick="doLogin(this)">Sign in</button></div>
+    <div class="err" id="loginErr"></div>
+    <table class="acct" id="acctTable">
+      <caption>Demo accounts &mdash; click one to fill it in</caption>
+      <tr data-u="admin" data-p="admin123"><td><b>admin</b> / admin123</td><td>Distribution Officer</td><td>shares &amp; traces</td></tr>
+      <tr data-u="rao" data-p="rao123"><td><b>rao</b> / rao123</td><td>Lt. Cdr. Rao</td><td>#07</td></tr>
+      <tr data-u="iyer" data-p="iyer123"><td><b>iyer</b> / iyer123</td><td>Cdr. Iyer</td><td>#11</td></tr>
+      <tr data-u="sharma" data-p="sharma123"><td><b>sharma</b> / sharma123</td><td>Lt. Sharma</td><td>#14</td></tr>
+      <tr data-u="fernandes" data-p="fernandes123"><td><b>fernandes</b> / fernandes123</td><td>Cdr. Fernandes</td><td>#19</td></tr>
+      <tr data-u="bose" data-p="bose123"><td><b>bose</b> / bose123</td><td>Lt. Cdr. Bose</td><td>#23</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ================================================================= APP -->
+<section id="app" class="hidden">
+  <aside class="rail">
+    <div class="brand"><b>NISHAAN</b><span>secure distribution console</span></div>
+    <ul class="nav" id="nav"></ul>
+    <div class="who">
+      <span class="role" id="whoRole"></span>
+      <b id="whoName"></b>
+      <span class="mono" id="whoId"></span><br>
+      <button onclick="logout()">Sign out</button>
+    </div>
+  </aside>
+  <main>
+    <div class="topbar">
+      <h1 id="pageTitle"></h1>
+      <div class="nodestrip" id="nodeStrip" title="Ledger nodes online"></div>
+    </div>
+
+    <!-- ---------- DISTRIBUTE (admin) ---------- -->
+    <div class="section view" id="v-distribute">
+      <p class="lede">Choose a PDF or an image, give it a classification and pick who may open it. It is encrypted once. The key is split into five shares for the five ledger nodes, and the key itself is thrown away.</p>
+      <div class="sheet"><span class="tab">New distribution</span><div class="inner">
+        <div class="grid2">
+          <div>
+            <div class="drop" id="shareDrop" onclick="document.getElementById('shareFile').click()">
+              <b>Drop a PDF or image here</b><span class="mute small">or click to choose &middot; PDF, PNG, JPG &middot; up to 30 MB</span>
+              <div class="fname" id="shareName"></div>
+            </div>
+            <input type="file" id="shareFile" class="hidden" accept="application/pdf,image/png,image/jpeg">
+            <label for="shareTitle">Title</label>
+            <input id="shareTitle" type="text" placeholder="e.g. Fleet movement order 14/26">
+            <label for="shareClass">Classification</label>
+            <select id="shareClass">
+              <option>RESTRICTED</option><option>CONFIDENTIAL</option><option selected>SECRET</option><option>TOP SECRET</option>
+            </select>
+          </div>
+          <div>
+            <label style="margin-top:0">Recipients &mdash; only these officers can open it</label>
+            <div class="recips" id="recipList"></div>
+            <div class="row small" style="margin-top:8px"><a href="#" onclick="pickAll(true);return false">select all</a><a href="#" onclick="pickAll(false);return false">clear</a></div>
+            <div style="margin-top:22px"><button class="btn teal" onclick="doShare(this)">Encrypt &amp; distribute</button></div>
+          </div>
+        </div>
+      </div></div>
+      <div id="shareResult"></div>
+    </div>
+
+    <!-- ---------- REGISTRY (admin) / INBOX (officer) ---------- -->
+    <div class="section view" id="v-docs">
+      <p class="lede" id="docsLede"></p>
+      <div class="sheet"><span class="tab" id="docsTab">Documents</span><div class="inner" id="docsBody"></div></div>
+    </div>
+
+    <!-- ---------- READER (officer) ---------- -->
+    <div class="section view" id="v-reader">
+      <p class="lede">Opening a document runs the full NISHAAN protocol. You sign a receipt, the ledger nodes check it and vote, three nodes release their key shares, and the rebuilt key is sent to you wrapped under your own ML-KEM key. You then get a copy carrying your personal mark.</p>
+      <div class="sheet"><span class="tab">Request access</span><div class="inner">
+        <div class="row">
+          <div style="flex:1;min-width:220px"><label for="openId" style="margin-top:0">Document ID</label><input id="openId" type="text" class="mono" placeholder="12-character id from your inbox" spellcheck="false"></div>
+          <div style="align-self:flex-end"><button class="btn teal" id="openBtn" onclick="doOpen(this)">Sign &amp; request unlock</button></div>
+        </div>
+        <div class="nodes" id="voteNodes" style="margin-top:20px"></div>
+        <div class="quorum" id="voteQuorum"></div>
+        <ol class="pipeline" id="pipeline"></ol>
+      </div></div>
+      <div id="readerOut"></div>
+    </div>
+
+    <!-- ---------- LEDGER ---------- -->
+    <div class="section view" id="v-ledger">
+      <p class="lede">Every successful opening becomes a block: the officer's signed receipt, sealed with a SHA3-256 hash, linked to the block before it, and co-signed by at least four nodes. <b>Verify</b> re-checks every hash, link and signature from scratch.</p>
+      <div class="row" style="margin-bottom:18px">
+        <button class="btn teal" onclick="doVerify(this)">Verify entire chain</button>
+        <button class="btn ghost" onclick="loadLedger()">Refresh</button>
+      </div>
+      <div class="sheet hidden" id="tamperSheet"><span class="tab">Demo &middot; insider tampering</span><div class="inner">
+        <p class="small mute" style="margin-top:0">Pretend to be a corrupt insider with direct database access, and rewrite a past record to blame someone else. Then press <b>Verify</b>.</p>
+        <div class="row">
+          <div><label style="margin-top:0">Block #</label><select id="tBlock" style="width:110px"></select></div>
+          <div><label style="margin-top:0">Blame</label><select id="tWho" style="width:190px"></select></div>
+          <div><label style="margin-top:0">Method</label><select id="tMode" style="width:260px"><option value="edit">Edit the record</option><option value="rehash">Edit + recompute its hash</option></select></div>
+          <div style="align-self:flex-end"><button class="btn claret" onclick="doTamper(this)">Tamper</button></div>
+          <div style="align-self:flex-end"><button class="btn ghost" onclick="doRestore(this)">Undo all tampering</button></div>
+        </div>
+      </div></div>
+      <div id="verifyBanner"></div>
+      <div class="chain" id="chain"></div>
+    </div>
+
+    <!-- ---------- TRACE (admin) ---------- -->
+    <div class="section view" id="v-trace">
+      <p class="lede">Found a copy somewhere it shouldn't be, such as a forwarded PDF, a screenshot or a re-saved JPEG? Pick the original document and drop the leaked file in. NISHAAN reads the hidden mark and matches it against the ledger.</p>
+      <div class="sheet"><span class="tab">Leak investigation</span><div class="inner">
+        <div class="grid2">
+          <div>
+            <label for="traceDoc" style="margin-top:0">Original document</label>
+            <select id="traceDoc"></select>
+            <div style="margin-top:22px"><button class="btn claret" onclick="doTrace(this)">Identify the source</button></div>
+          </div>
+          <div>
+            <div class="drop" id="traceDrop" onclick="document.getElementById('traceFile').click()">
+              <b>Drop the leaked copy here</b><span class="mute small">PDF, PNG or JPG &middot; resized or re-saved is fine</span>
+              <div class="fname" id="traceName"></div>
+            </div>
+            <input type="file" id="traceFile" class="hidden" accept="application/pdf,image/png,image/jpeg">
+          </div>
+        </div>
+      </div></div>
+      <div id="traceOut"></div>
+    </div>
+
+    <!-- ---------- NODES (admin) ---------- -->
+    <div class="section view" id="v-nodes">
+      <p class="lede">Five nodes each hold one key share and one ML-DSA-65 signing key. Opening a document needs <b>4 of 5</b> to verify and co-sign. Take nodes offline to see the system refuse to unlock.</p>
+      <div class="nodes" id="nodeGrid"></div>
+      <div class="quorum" id="nodeQuorum"></div>
+    </div>
+
+    <!-- ---------- AUDIT (admin) ---------- -->
+    <div class="section view" id="v-audit">
+      <p class="lede">Everything is logged, including every refused attempt: wrong recipients, failed quorums, failed logins and tampering.</p>
+      <div class="row" style="margin-bottom:14px">
+        <button class="btn ghost sm" onclick="loadAudit()">Refresh</button>
+        <label style="margin:0;display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font:14px var(--body)"><input type="checkbox" id="onlyBad" onchange="loadAudit()" style="accent-color:var(--claret)"> Show only refusals &amp; alerts</label>
+      </div>
+      <div class="sheet"><span class="tab">Audit log</span><div class="inner" id="auditBody"></div></div>
+    </div>
+
+    <!-- ---------- SYSTEM / KEYS ---------- -->
+    <div class="section view" id="v-system">
+      <div class="sheet"><span class="tab">Cryptography in use</span><div class="inner"><dl class="kv" id="algos"></dl></div></div>
+      <div class="sheet"><span class="tab">Public-key fingerprints</span><div class="inner" id="keysBody"></div></div>
+      <div class="sheet hidden" id="resetSheet"><span class="tab">Demo reset</span><div class="inner">
+        <p class="small" style="margin-top:0">This wipes every document, ledger block and audit entry, and generates fresh keys. Use it before a rehearsal or the final demo.</p>
+        <button class="btn claret" id="resetBtn" onclick="doReset(this)">Reset demo data</button>
+      </div></div>
+    </div>
+  </main>
+</section>
+<div class="banner">Restricted &nbsp;//&nbsp; handle via approved channels only</div>
+<div id="toast" class="hidden"></div>
+
+<script>
+"use strict";
+const API = location.protocol.startsWith("http") ? location.origin : "http://localhost:8000";
+let TOKEN = null, ME = null, USERS = [], DOCS = [], CUR = null, lastObjUrl = null;
+
+const NAV = {
+  admin: [["distribute","Distribute"],["docs","Registry"],["ledger","Ledger"],["trace","Trace a leak"],["nodes","Nodes"],["audit","Audit log"],["system","System"]],
+  officer: [["docs","Inbox"],["reader","Open document"],["ledger","Ledger"],["system","Keys"]],
+};
+const TITLES = {distribute:"Distribute a document",docs:"",reader:"Open a document",ledger:"Ledger",trace:"Trace a leak",nodes:"Ledger nodes",audit:"Audit log",system:"System"};
+
+/* ---------------------------------------------------------------- helpers */
+const $ = id => document.getElementById(id);
+function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function when(t){ if(!t) return ""; const d=new Date(t*1000); return d.toLocaleString(undefined,{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
+function short(h,n=10){ return h ? esc(h.slice(0,n))+"…" : ""; }
+function nameOf(u){ const x=USERS.find(v=>v.username===u); return x?x.name:u; }
+function idOf(u){ const x=USERS.find(v=>v.username===u); return x?x.officer_id:null; }
+function pad(n){ return String(n).padStart(2,"0"); }
+function stamp(c){ return `<span class="stamp ${esc((c||"").split(" ")[0])}">${esc(c)}</span>`; }
+let toastTimer;
+function toast(msg,bad){ const t=$("toast"); t.textContent=msg; t.className=bad?"bad":""; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.add("hidden"),bad?7000:3500); }
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function copy(text){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(()=>toast("Copied "+text)).catch(()=>{ prompt("Copy this:",text); }); }
+
+async function api(path,opt={}){
+  opt.headers = Object.assign({}, opt.headers||{}, TOKEN?{"Authorization":"Bearer "+TOKEN}:{});
+  let r;
+  try { r = await fetch(API+path,opt); $("offline").classList.add("hidden"); }
+  catch(e){ $("offline").classList.remove("hidden"); throw new Error("server not reachable"); }
+  if (r.status===401 && TOKEN && path!=="/login"){ toast("Your session ended. Please sign in again.",true); logout(); throw new Error("signed out"); }
+  return r;
+}
+async function errText(r){ try{ const j=await r.json(); return j.detail||JSON.stringify(j); }catch(_){ return "HTTP "+r.status; } }
+
+async function busy(btn,label,fn){
+  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML=label;
+  try{ await fn(); }
+  catch(e){ if(e.message!=="signed out") toast(e.message==="server not reachable"?"Can't reach the server. Is the black terminal still running?":e.message,true); }
+  finally{ btn.disabled=false; btn.innerHTML=old; }
+}
+
+/* ---------------------------------------------------------------- login */
+document.querySelectorAll("#acctTable tr[data-u]").forEach(tr=>tr.onclick=()=>{ $("lu").value=tr.dataset.u; $("lp").value=tr.dataset.p; $("lp").focus(); });
+$("lp").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("lu").addEventListener("keydown",e=>{ if(e.key==="Enter") $("lp").focus(); });
+
+function doLogin(btn){ return busy(btn,"Signing in…",async()=>{
+  $("loginErr").textContent="";
+  const r = await api("/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:$("lu").value,password:$("lp").value})});
+  if(!r.ok){ $("loginErr").textContent = await errText(r); return; }
+  const j = await r.json(); TOKEN=j.token; ME=j.user;
+  try{ sessionStorage.setItem("nishaan_token",TOKEN); }catch(_){}
+  $("lp").value="";
+  await enterApp();
+});}
+
+function logout(){
+  TOKEN=null; ME=null; try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
+  if(lastObjUrl){ URL.revokeObjectURL(lastObjUrl); lastObjUrl=null; }
+  $("readerOut").innerHTML=""; $("traceOut").innerHTML=""; $("shareResult").innerHTML=""; $("pipeline").innerHTML=""; $("voteNodes").innerHTML=""; $("voteQuorum").innerHTML="";
+  $("app").classList.add("hidden"); $("login").classList.remove("hidden"); $("lu").focus();
+}
+
+async function enterApp(){
+  $("login").classList.add("hidden"); $("app").classList.remove("hidden");
+  $("whoRole").textContent = ME.role==="admin" ? "Distribution Officer" : "Officer";
+  $("whoName").textContent = ME.name; $("whoId").textContent = "#"+pad(ME.officer_id)+" · "+ME.username;
+  $("nav").innerHTML = NAV[ME.role].map(([k,l],i)=>`<li><button data-v="${k}" onclick="show('${k}')"><i>${pad(i+1)}</i>${l}</button></li>`).join("");
+  $("tamperSheet").classList.toggle("hidden",ME.role!=="admin");
+  $("resetSheet").classList.toggle("hidden",ME.role!=="admin");
+  USERS = await (await api("/users")).json();
+  $("recipList").innerHTML = USERS.filter(u=>u.role==="officer").map(u=>`<label><input type="checkbox" value="${esc(u.username)}">${esc(u.name)}<span class="id">#${pad(u.officer_id)}</span></label>`).join("");
+  $("tWho").innerHTML = USERS.filter(u=>u.role==="officer").map(u=>`<option value="${esc(u.username)}">${esc(u.name)} (#${pad(u.officer_id)})</option>`).join("");
+  refreshNodeStrip();
+  show(NAV[ME.role][0][0]);
+}
+
+/* ---------------------------------------------------------------- navigation */
+function show(v){
+  document.querySelectorAll(".view").forEach(s=>s.classList.add("hidden"));
+  $("v-"+v).classList.remove("hidden");
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  const idx = NAV[ME.role].findIndex(x=>x[0]===v);
+  const label = v==="docs" ? (ME.role==="admin"?"Document registry":"My inbox") : (v==="system"&&ME.role!=="admin"?"Keys":TITLES[v]);
+  $("pageTitle").innerHTML = `<i>${pad(idx+1)}</i>${esc(label)}`;
+  window.scrollTo(0,0);
+  ({docs:loadDocs,ledger:loadLedger,trace:loadTraceDocs,nodes:loadNodes,audit:loadAudit,system:loadSystem})[v]?.();
+}
+
+/* ---------------------------------------------------------------- nodes */
+async function getNodes(){ return (await api("/nodes")).json(); }
+async function refreshNodeStrip(){
+  try{
+    const {nodes,quorum} = await getNodes();
+    const up = nodes.filter(n=>n.online).length;
+    $("nodeStrip").innerHTML = nodes.map(n=>`<s class="${n.online?"up":""}" title="${n.name} ${n.online?"online":"offline"}"></s>`).join("")+`<em>${up}/5 online · need ${quorum}</em>`;
+  }catch(_){}
+}
+function quorumHTML(n,q,labelGo,labelStop){
+  return `<div class="qbar">${[0,1,2,3,4].map(i=>`<span class="${i<n?"on":""}"></span>`).join("")}</div>
+    <span class="mono">${n} / 5 &nbsp;·&nbsp; need ${q}</span>
+    <span class="verdict ${n>=q?"go":"stop"}">${n>=q?labelGo:labelStop}</span>`;
+}
+async function loadNodes(){
+  const {nodes,quorum} = await getNodes();
+  $("nodeGrid").innerHTML = nodes.map(n=>`
+    <div class="node ${n.online?"up":"down"}">
+      <div class="nm">${n.name}</div><div class="st">${n.online?"online":"offline"}</div>
+      <div class="fp">key ${esc(n.key_fingerprint)}</div>
+      <div class="act"><button class="btn sm ${n.online?"ghost":"teal"}" onclick="toggleNode(this,'${n.name}',${!n.online})">${n.online?"Take offline":"Bring online"}</button></div>
+    </div>`).join("");
+  const up = nodes.filter(n=>n.online).length;
+  $("nodeQuorum").innerHTML = quorumHTML(up,quorum,"Documents can be unlocked","Every document stays locked");
+  refreshNodeStrip();
+}
+function toggleNode(btn,name,online){ return busy(btn,"…",async()=>{
+  const r = await api("/nodes/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,online})});
+  if(!r.ok) throw new Error(await errText(r));
+  await loadNodes();
+});}
+
+/* ---------------------------------------------------------------- distribute */
+function wireDrop(dropId,inputId,nameId){
+  const d=$(dropId), inp=$(inputId);
+  inp.onchange=()=>{ $(nameId).textContent = inp.files[0] ? inp.files[0].name+"  ·  "+(inp.files[0].size/1048576).toFixed(2)+" MB" : ""; };
+  d.addEventListener("dragover",e=>{e.preventDefault();d.classList.add("over");});
+  d.addEventListener("dragleave",()=>d.classList.remove("over"));
+  d.addEventListener("drop",e=>{e.preventDefault();d.classList.remove("over"); if(e.dataTransfer.files.length){ inp.files=e.dataTransfer.files; inp.onchange(); }});
+}
+wireDrop("shareDrop","shareFile","shareName");
+wireDrop("traceDrop","traceFile","traceName");
+function pickAll(v){ document.querySelectorAll("#recipList input").forEach(i=>i.checked=v); }
+
+function doShare(btn){ return busy(btn,"Encrypting…",async()=>{
+  const f = $("shareFile").files[0];
+  if(!f) throw new Error("Choose a PDF or image first.");
+  const rec = [...document.querySelectorAll("#recipList input:checked")].map(i=>i.value);
+  if(!rec.length) throw new Error("Tick at least one recipient officer.");
+  const fd = new FormData(); fd.append("file",f); fd.append("title",$("shareTitle").value); fd.append("classification",$("shareClass").value); fd.append("recipients",rec.join(","));
+  const r = await api("/documents",{method:"POST",body:fd});
+  if(!r.ok) throw new Error(await errText(r));
+  const d = await r.json();
+  $("shareResult").innerHTML = `
+    <div class="sheet"><span class="tab">Sealed</span><div class="inner">
+      <div class="sealed">
+        <div>${stamp(d.classification).replace('class="stamp','class="stamp big')}</div>
+        <div>
+          <div style="font:600 20px var(--head);letter-spacing:.03em">${esc(d.title)}</div>
+          <div class="small mute">${esc(d.filename)} · ${d.doctype==="pdf"?d.pages+" page PDF":"image"} · for ${d.recipients.map(u=>esc(nameOf(u))).join(", ")}</div>
+          <div style="margin-top:10px">Document ID&nbsp; <span class="idchip" onclick="copy('${d.doc_id}')" title="click to copy">${d.doc_id}</span> <span class="small mute">&larr; click to copy; recipients will also see it in their inbox</span></div>
+        </div>
+      </div>
+      <div class="split">${["N1","N2","N3","N4","N5"].map((n,i)=>`<div><b>${n}</b>share ${i+1}</div>`).join("")}</div>
+      <p class="small mute" style="margin:10px 0 0">AES-256-GCM ciphertext SHA3 <span class="mono">${esc(d.ciphertext_sha3)}…</span>. The key was split 3-of-5 and then discarded. No single node, and not this server, can open the file on its own.</p>
+    </div></div>`;
+  $("shareFile").value=""; $("shareName").textContent=""; $("shareTitle").value=""; pickAll(false);
+  toast("Document sealed and distributed.");
+});}
+
+/* ---------------------------------------------------------------- registry / inbox */
+async function loadDocs(){
+  const admin = ME.role==="admin";
+  $("docsLede").textContent = admin ? "Every document you have distributed, who can open it, and how many times it has been opened." :
+    "Documents shared with you. Opening one is signed by you and permanently recorded on the ledger.";
+  $("docsTab").textContent = admin ? "Registry" : "Inbox";
+  DOCS = await (await api("/documents")).json();
+  if(!DOCS.length){ $("docsBody").innerHTML = `<div class="empty">${admin?"Nothing distributed yet. Go to <b>Distribute</b> to seal your first document.":"Nothing has been shared with you yet. Ask the Distribution Officer (sign in as <b>admin</b>) to share a document with you."}</div>`; return; }
+  $("docsBody").innerHTML = `<table class="list"><thead><tr><th>Document</th><th>Class</th><th>${admin?"Recipients":"From"}</th><th>Opened</th><th>ID</th><th></th></tr></thead><tbody>${
+    DOCS.map(d=>`<tr>
+      <td><b>${esc(d.title)}</b><div class="small mute">${esc(d.filename)} · ${d.doctype==="pdf"?d.pages+" pp":"image"} · ${when(d.created_at)}</div></td>
+      <td>${stamp(d.classification)}</td>
+      <td class="small">${admin ? d.recipients.map(u=>esc(nameOf(u))).join("<br>") : esc(nameOf(d.created_by))}</td>
+      <td class="mono">${d.opens}×</td>
+      <td><span class="idchip" onclick="copy('${d.doc_id}')" title="click to copy">${d.doc_id}</span></td>
+      <td>${admin ? `<button class="btn sm ghost" onclick="gotoTrace('${d.doc_id}')">Trace</button>` : `<button class="btn sm teal" onclick="gotoOpen('${d.doc_id}')">Open</button>`}</td>
+    </tr>`).join("")}</tbody></table>`;
+}
+function gotoOpen(id){ show("reader"); $("openId").value=id; $("openBtn").click(); }
+let PENDING_TRACE=null;
+function gotoTrace(id){ PENDING_TRACE=id; show("trace"); }
+
+/* ---------------------------------------------------------------- open (reader) */
+function step(txt,cls="done"){ const li=document.createElement("li"); li.className=cls; li.innerHTML=txt; $("pipeline").appendChild(li); return li; }
+function renderVoteNodes(state){
+  $("voteNodes").innerHTML = ["N1","N2","N3","N4","N5"].map(n=>{
+    const s = state[n]||"waiting";
+    const cls = {signed:"up signed",offline:"down",rejected:"rejected",working:"working",waiting:"down"}[s];
+    const label = {signed:"verified · signed",offline:"offline · no vote",rejected:"rejected",working:"checking signature…",waiting:"waiting"}[s];
+    return `<div class="node ${cls}"><div class="nm">${n}</div><div class="st">${label}</div></div>`;
+  }).join("");
+}
+async function animateVotes(votes){
+  const state={};
+  for(const n of ["N1","N2","N3","N4","N5"]){
+    state[n]="working"; renderVoteNodes(state); await sleep(230);
+    state[n]=votes[n]||"offline"; renderVoteNodes(state); await sleep(90);
+  }
+}
+function doOpen(btn){ return busy(btn,"Nodes voting…",async()=>{
+  const id = $("openId").value.trim();
+  if(!/^[0-9a-f]{12}$/.test(id)) throw new Error("Paste the 12-character document ID from your inbox.");
+  if(lastObjUrl){ URL.revokeObjectURL(lastObjUrl); lastObjUrl=null; }
+  $("readerOut").innerHTML=""; $("pipeline").innerHTML=""; $("voteQuorum").innerHTML=""; renderVoteNodes({});
+  step(`Signing receipt as <b>${esc(ME.name)}</b> with your ML-DSA-65 key…`,"");
+  const r = await api(`/open/${id}`,{method:"POST"});
+  $("pipeline").innerHTML="";
+  if(r.status===423){
+    const j = await r.json();
+    step(`Receipt signed by <b>${esc(ME.name)}</b> (ML-DSA-65)`);
+    await animateVotes(j.votes||{});
+    $("voteQuorum").innerHTML = quorumHTML(j.valid_votes,j.quorum,"","Locked");
+    step(`Quorum not reached: only ${j.valid_votes} of 5 nodes could sign, and ${j.quorum} are needed. No key shares released. The file stays locked.`,"fail");
+    step(`This refused attempt was written to the audit log.`,"fail");
+    return;
+  }
+  if(!r.ok){ step(esc(await errText(r)),"fail"); return; }
+  const m = JSON.parse(atob(r.headers.get("X-Nishaan-Meta")));
+  const blob = await r.blob();
+  step(`Receipt signed by <b>${esc(m.name)}</b> &middot; ML-DSA-65 signature <span class="mono">${esc(m.officer_sig_fingerprint)}…</span>`);
+  await animateVotes(m.votes);
+  $("voteQuorum").innerHTML = quorumHTML(m.valid_votes,m.quorum,"Quorum reached","Locked");
+  step(`Block <b>#${m.block_index}</b> sealed &middot; <span class="mono">${short(m.block_hash,16)}</span> &middot; linked to <span class="mono">${short(m.prev_hash,10)}</span>`);
+  step(`Key shares released by <b>${m.shares_from.join(", ")}</b> &rarr; file key rebuilt (Shamir 3-of-5)`);
+  step(`Key delivered wrapped under your ML-KEM-768 public key &middot; ${m.kem_ciphertext_bytes}-byte capsule <span class="mono">${esc(m.kem_ciphertext_fingerprint)}…</span>`);
+  step(`Decrypted (AES-256-GCM) and marked for officer <b>#${pad(m.officer_id)}</b> on ${m.doctype==="pdf"?"all "+m.pages+" pages":"the image"}`);
+  lastObjUrl = URL.createObjectURL(blob);
+  const viewer = m.doctype==="pdf" ? `<iframe src="${lastObjUrl}" title="document"></iframe>` : `<img src="${lastObjUrl}" alt="document">`;
+  $("readerOut").innerHTML = `
+    <div class="sheet"><span class="tab">Your marked copy</span><div class="inner" style="padding:0">
+      <div class="copyline"><span>${esc(m.title)} &nbsp;·&nbsp; ${esc(m.classification)}</span><span>COPY #${pad(m.officer_id)} · ${esc(m.name)} · session ${esc(m.session)}</span></div>
+      <div class="docframe">${viewer}</div>
+      <div style="padding:14px 16px" class="row"><a class="btn teal" href="${lastObjUrl}" download="${esc(m.filename)}">Download copy</a><span class="small mute">Saved as <span class="mono">${esc(m.filename)}</span>. If this file leaks, it points back to you.</span></div>
+    </div></div>`;
+  refreshNodeStrip();
+});}
+$("openId").addEventListener("keydown",e=>{ if(e.key==="Enter") $("openBtn").click(); });
+
+/* ---------------------------------------------------------------- ledger */
+let VERIFY = null, BLOCKS = [];
+async function loadLedger(){
+  const [bl, docs] = await Promise.all([api("/ledger").then(r=>r.json()), api("/documents").then(r=>r.json())]);
+  BLOCKS = bl; DOCS = docs;
+  $("tBlock").innerHTML = BLOCKS.slice().reverse().map(b=>`<option value="${b.index}">#${b.index}</option>`).join("");
+  renderChain();
+}
+function renderChain(){
+  const vmap = {}; (VERIFY?.blocks||[]).forEach(b=>vmap[b.index]=b);
+  if(!BLOCKS.length){ $("chain").innerHTML = `<div class="empty">No openings recorded yet. Blocks appear here when an officer opens a document.</div>`; return; }
+  $("chain").innerHTML = BLOCKS.map(b=>{
+    const v = vmap[b.index]; const bad = v && !v.ok;
+    const doc = DOCS.find(d=>d.doc_id===b.doc_id);
+    const votes = Object.keys(b.votes||{});
+    return `<div class="blk ${bad?"bad":""}">
+      <div class="ix"><small>BLOCK</small>${b.index}</div>
+      <div class="body">
+        <div class="t">${esc(nameOf(b.username))} <span class="mono mute">#${pad(b.officer_id)}</span> opened ${doc?`<i>${esc(doc.title)}</i>`:`<span class="mono">${esc(b.doc_id)}</span>`}</div>
+        <div class="small mute">${when(b.time)} &middot; session <span class="mono">${esc(b.session)}</span></div>
+        <div class="hashes"><span>hash</span><code title="${esc(b.block_hash)}">${esc(b.block_hash)}</code><span>prev</span><code title="${esc(b.prev_hash)}">${esc(b.prev_hash)}</code><span>receipt</span><code title="${esc(b.receipt_hash)}">${esc(b.receipt_hash)}</code><span>officer sig</span><code>${esc(b.officer_sig_fingerprint)}… (ML-DSA-65)</code></div>
+        ${bad?`<ul class="problems">${v.problems.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}
+      </div>
+      <div class="side">
+        <div class="pips">${["N1","N2","N3","N4","N5"].map(n=>`<s class="${votes.includes(n)?"on":""}" title="${n}${votes.includes(n)?" signed "+b.votes[n]:" did not vote"}"></s>`).join("")}</div>
+        <div class="small">${b.valid_votes}/5 node signatures</div>
+        ${v ? `<span class="vstamp ${v.ok?"ok":"bad"}">${v.ok?"Verified":"Tampered"}</span>` : ""}
+      </div>
+    </div>`;}).join("");
+}
+function showVerify(v){
+  VERIFY = v;
+  $("verifyBanner").innerHTML = v.ok
+    ? `<div class="banner-state ok">&#10003; All ${v.checked} block${v.checked===1?"":"s"} verified: every hash, link, officer signature and node vote checks out</div>`
+    : `<div class="banner-state bad">&#10007; Tampering detected in block ${v.blocks.filter(b=>!b.ok).map(b=>"#"+b.index).join(", ")}. The record no longer matches its signatures.</div>`;
+  renderChain();
+}
+function doVerify(btn){ return busy(btn,"Verifying…",async()=>{ await loadLedger(); showVerify(await (await api("/ledger/verify")).json()); });}
+function doTamper(btn){ return busy(btn,"Tampering…",async()=>{
+  if(!$("tBlock").value) throw new Error("There are no blocks to tamper with yet.");
+  const r = await api("/ledger/tamper",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:+$("tBlock").value,mode:$("tMode").value,username:$("tWho").value})});
+  if(!r.ok) throw new Error(await errText(r));
+  VERIFY=null; $("verifyBanner").innerHTML=""; await loadLedger();
+  toast(`Block #${$("tBlock").value} rewritten. It looks normal. Now press "Verify entire chain".`);
+});}
+function doRestore(btn){ return busy(btn,"Restoring…",async()=>{
+  const r = await api("/ledger/restore",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
+  await loadLedger(); showVerify(await r.json()); toast("All blocks restored to their sealed versions.");
+});}
+
+/* ---------------------------------------------------------------- trace */
+async function loadTraceDocs(){
+  const keep = PENDING_TRACE || $("traceDoc").value; PENDING_TRACE=null;
+  DOCS = await (await api("/documents")).json();
+  $("traceDoc").innerHTML = DOCS.length ? DOCS.map(d=>`<option value="${d.doc_id}">${esc(d.title)} · ${d.doc_id}</option>`).join("") : `<option value="">No documents distributed yet</option>`;
+  if(keep && DOCS.some(d=>d.doc_id===keep)) $("traceDoc").value = keep;
+}
+function doTrace(btn){ return busy(btn,"Reading the mark…",async()=>{
+  const id = $("traceDoc").value, f = $("traceFile").files[0];
+  if(!id) throw new Error("Distribute a document first.");
+  if(!f) throw new Error("Drop the leaked copy into the box first.");
+  const fd = new FormData(); fd.append("doc_id",id); fd.append("file",f);
+  const r = await api("/trace",{method:"POST",body:fd});
+  if(!r.ok) throw new Error(await errText(r));
+  const j = await r.json(), L = j.layers;
+  if(!j.found){
+    $("traceOut").innerHTML = `<div class="clean"><b>No NISHAAN mark found</b>${esc(j.verdict)}<div class="small" style="margin-top:8px">Checked ${L.pages_checked} page(s).</div></div>`; return;
+  }
+  const pct = Math.round((L.pixel_confidence||0)*100);
+  $("traceOut").innerHTML = `
+    <div class="caught">
+      <div class="who">
+        <div class="lbl">Source identified</div>
+        <div class="nm">${esc(j.name)}</div>
+        <div class="num">officer #${pad(j.officer_id)} · ${esc(j.username)}</div>
+        <p style="margin:18px 0 0;font-size:14px;opacity:.92">${esc(j.verdict)}</p>
+      </div>
+      <div class="ev">
+        <dl class="kv">
+          <dt>Pixel mark</dt><dd>${L.pixel!=null?`#${pad(L.pixel)} &middot; ${L.pages_agreeing||1} of ${L.pages_checked} page(s) agree`:"not readable"}
+            ${L.pixel!=null?`<div class="meter"><span style="width:${pct}%"></span></div><span class="small mute">confidence ${pct}%</span>`:""}</dd>
+          <dt>Metadata tag</dt><dd>${L.metadata!=null?"#"+pad(L.metadata):'<span class="mute">not present (image, or stripped)</span>'}</dd>
+          <dt>Layers agree</dt><dd>${j.layers_agree?"yes":'<b style="color:var(--claret)">no, the file was edited</b>'}</dd>
+          <dt>Authorised?</dt><dd>${j.was_recipient?"yes, on the recipient list":'<b style="color:var(--claret)">NO, not a recipient</b>'}</dd>
+        </dl>
+        <div style="margin-top:14px;font:600 10px var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)">Ledger evidence</div>
+        ${j.ledger_blocks.length ? j.ledger_blocks.map(b=>`<div class="small" style="border-top:1px solid var(--rule-2);padding:6px 0">Block <b>#${b.index}</b> &middot; ${when(b.time)} &middot; ${b.valid_votes}/5 signatures &middot; <span class="mono">${short(b.block_hash,12)}</span></div>`).join("") : '<div class="small" style="color:var(--claret)">No signed opening by this officer is on record.</div>'}
+      </div>
+    </div>`;
+});}
+
+/* ---------------------------------------------------------------- audit */
+async function loadAudit(){
+  let ev = await (await api("/audit")).json();
+  if($("onlyBad").checked) ev = ev.filter(e=>["DENIED","LOGIN_FAILED","TAMPER"].includes(e.kind));
+  $("auditBody").innerHTML = ev.length ? `<table class="list"><thead><tr><th>Time</th><th>Event</th><th>Who</th><th>Document</th><th>Detail</th></tr></thead><tbody>${
+    ev.map(e=>`<tr><td class="small mono">${when(e.time)}</td><td><span class="tag ${esc(e.kind)}">${esc(e.kind.replace("_"," "))}</span></td><td class="small">${esc(e.username?nameOf(e.username):"")}</td><td class="mono small">${esc(e.doc_id||"")}</td><td class="small">${esc(e.detail)}</td></tr>`).join("")}</tbody></table>` : `<div class="empty">Nothing here yet.</div>`;
+}
+
+/* ---------------------------------------------------------------- system */
+async function loadSystem(){
+  const h = await (await api("/health")).json();
+  const names = {file:"File encryption",key_split:"Key splitting",signatures:"Signatures",key_delivery:"Key delivery",hash:"Hashing / chain",passwords:"Password storage"};
+  $("algos").innerHTML = Object.entries(h.algorithms).map(([k,v])=>`<dt>${names[k]||k}</dt><dd>${esc(v)}</dd>`).join("") + `<dt>Version</dt><dd>NISHAAN ${esc(h.version)}</dd>`;
+  const {nodes} = await getNodes();
+  USERS = await (await api("/users")).json();
+  $("keysBody").innerHTML = `<table class="list"><thead><tr><th>Holder</th><th>ML-DSA-65 signing key</th><th>ML-KEM-768 key</th></tr></thead><tbody>${
+    USERS.map(u=>`<tr><td><b>${esc(u.name)}</b> <span class="mono mute">#${pad(u.officer_id)}</span></td><td class="mono">${esc(u.dsa_pub_fingerprint)}</td><td class="mono">${esc(u.kem_pub_fingerprint)}</td></tr>`).join("")}${
+    nodes.map(n=>`<tr><td><b>Ledger node ${n.name}</b></td><td class="mono">${esc(n.key_fingerprint)}</td><td class="mute">n/a</td></tr>`).join("")}</tbody></table>
+    <p class="small mute" style="margin-bottom:0">Fingerprint = first 16 hex characters of the SHA3-256 of the public key.</p>`;
+}
+let resetArmed=false;
+function doReset(btn){
+  if(!resetArmed){ resetArmed=true; btn.textContent="Click again to confirm"; setTimeout(()=>{ resetArmed=false; btn.textContent="Reset demo data"; },4000); return; }
+  resetArmed=false;
+  return busy(btn,"Resetting…",async()=>{
+    const r = await api("/admin/reset",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
+    toast("Demo data wiped and fresh keys generated."); await loadSystem(); refreshNodeStrip();
+  });
+}
+
+/* ---------------------------------------------------------------- start */
+(async function start(){
+  try{
+    const r = await fetch(API+"/health"); if(!r.ok) throw 0;
+  }catch(_){ $("offline").classList.remove("hidden"); }
+  let t=null; try{ t=sessionStorage.getItem("nishaan_token"); }catch(_){}
+  if(t){
+    TOKEN=t;
+    try{ const r = await fetch(API+"/me",{headers:{"Authorization":"Bearer "+t}}); if(r.ok){ ME=await r.json(); await enterApp(); return; } }catch(_){}
+    TOKEN=null; try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
+  }
+  $("lu").focus();
+})();
+</script>
+</body>
+</html>

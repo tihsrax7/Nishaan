@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+liboqs-python
+cryptography
+pycryptodome
+opencv-python-headless
+numpy
+pymupdf
+pyjwt
+requests
