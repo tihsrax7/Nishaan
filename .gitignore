@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+backend/nishaan.db
+backend/db.sqlite3
+backend/store/
+.env
+*.log
