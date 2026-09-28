@@ -109,7 +109,7 @@ nishaan_mvp_v4/
 - **Crypto + auth**: `crypto.py`, `auth.py`
 - **Ledger**: `ledger.py`
 - **Watermark**: `watermark.py`, `pdf_support.py`. Spare time: test phone photos of printed pages
-- **Frontend (2 people)**: `frontend/index.html` (GitHub-style, light + dark theme). Edit it and press F5; no restart needed
+- **Frontend (2 people)**: `frontend/index.html` (formal navy console: left navigation panel, Times New Roman, light theme by default with a dark option). Edit it and press F5; no restart needed
 - **Integration + video + submission**: `main.py`, README, demo script, GitHub, YouTube, final PPT slide
 
 ## API (for the curious)
