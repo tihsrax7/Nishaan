@@ -7,7 +7,10 @@ All the real cryptography, via liboqs (post-quantum) + standard libraries:
   - ML-KEM-768 (FIPS 203)  the rebuilt file key is delivered to the officer wrapped
                            under that officer's own ML-KEM public key
   - SHA3-256               block hashing / chaining
-  - scrypt                 password hashing
+  - scrypt                 password hashing, and deriving each officer's key-sealing key
+  - AES-256-GCM "sealing"  officer private keys are stored sealed under a key derived from
+                           the officer's own password; node keys and key shares are sealed
+                           under per-node key files (see keystore.py)
 Keys are exported/imported as bytes so they persist in SQLite across restarts.
 """
 import os
@@ -101,3 +104,23 @@ def hash_password(password: str, salt: bytes | None = None):
 
 def check_password(password: str, salt: bytes, expected: bytes) -> bool:
     return hmac.compare_digest(hash_password(password, salt)[1], expected)
+
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+# ---------------------------------------------------------------- sealing (keys at rest)
+def derive_kek(password: str, salt: bytes) -> bytes:
+    """Key-encryption key from a password (scrypt, separate salt from the login hash)."""
+    return hashlib.scrypt(password.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
+
+
+def seal(key: bytes, data: bytes, label: str) -> bytes:
+    """AES-256-GCM: returns nonce || ciphertext+tag. `label` binds the blob to its owner."""
+    nonce = os.urandom(12)
+    return nonce + AESGCM(key).encrypt(nonce, data, b"NISHAAN-seal:" + label.encode())
+
+
+def unseal(key: bytes, blob: bytes, label: str) -> bytes:
+    return AESGCM(key).decrypt(blob[:12], blob[12:], b"NISHAAN-seal:" + label.encode())

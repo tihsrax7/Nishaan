@@ -45,15 +45,20 @@ def restart_checks():
     adm = requests.post(API + "/login", json={"username": "admin", "password": "admin123"}).json()["token"]
     rao = requests.post(API + "/login", json={"username": "officer1", "password": "officer1123"}).json()["token"]
     v = requests.get(API + "/ledger/verify", headers={"Authorization": "Bearer " + rao}).json()
-    if not (v["ok"] and v["checked"] == 6):
+    before = v["checked"]
+    if not (v["ok"] and before >= 6):
         fails.append("ledger no longer verifies after restart")
     docs = requests.get(API + "/documents", headers={"Authorization": "Bearer " + rao}).json()
-    r = requests.post(API + f"/open/{docs[-1]['doc_id']}", headers={"Authorization": "Bearer " + rao})
+    r = requests.post(API + f"/open/{docs[-1]['doc_id']}", headers={"Authorization": "Bearer " + rao},
+                      json={"password": "officer1123"})
     if r.status_code != 200:
         fails.append(f"old document can't be opened after restart ({r.status_code})")
     v = requests.get(API + "/ledger/verify", headers={"Authorization": "Bearer " + adm}).json()
-    if not (v["ok"] and v["checked"] == 7):
+    if not (v["ok"] and v["checked"] == before + 1):
         fails.append("new block after restart doesn't chain onto the old ones")
+    a = requests.get(API + "/audit/verify", headers={"Authorization": "Bearer " + adm}).json()
+    if not a["ok"]:
+        fails.append("audit-log hash chain broken after restart")
     return fails
 
 
@@ -61,7 +66,8 @@ results = []
 for i in range(1, 11):
     tmp = tempfile.mkdtemp(prefix="nishaan_run_")
     env = dict(os.environ, NISHAAN_DB=os.path.join(tmp, "test.db"), NISHAAN_STORE=os.path.join(tmp, "store"),
-               NISHAAN_SECRET_FILE=os.path.join(tmp, "jwt_secret"))
+               NISHAAN_SECRET_FILE=os.path.join(tmp, "jwt_secret"), NISHAAN_NODE_KEYS=os.path.join(tmp, "node_keys"),
+               NISHAAN_NODE_LEDGERS=os.path.join(tmp, "node_ledgers"))
     p = start(env)
     r = subprocess.run([sys.executable, "tests/test_e2e.py"], cwd=BACKEND, capture_output=True, text=True, env=env)
     stop(p)
@@ -71,6 +77,8 @@ for i in range(1, 11):
     for f in ("test.db",):
         os.remove(os.path.join(tmp, f))
     shutil.rmtree(os.path.join(tmp, "store"), ignore_errors=True)
+    shutil.rmtree(os.path.join(tmp, "node_keys"), ignore_errors=True)
+    shutil.rmtree(os.path.join(tmp, "node_ledgers"), ignore_errors=True)
     p = start(env)
     rs = subprocess.run([sys.executable, "tests/test_security.py"], cwd=BACKEND, capture_output=True, text=True, env=env)
     stop(p)
@@ -79,6 +87,8 @@ for i in range(1, 11):
     # restart checks need the e2e data, so re-run e2e quickly on a fresh db
     os.remove(os.path.join(tmp, "test.db"))
     shutil.rmtree(os.path.join(tmp, "store"), ignore_errors=True)
+    shutil.rmtree(os.path.join(tmp, "node_keys"), ignore_errors=True)
+    shutil.rmtree(os.path.join(tmp, "node_ledgers"), ignore_errors=True)
     p = start(env)
     subprocess.run([sys.executable, "tests/test_e2e.py"], cwd=BACKEND, capture_output=True, text=True, env=env)
     stop(p)

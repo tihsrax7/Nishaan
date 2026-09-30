@@ -106,7 +106,7 @@ def main():
         check("passwords are not stored in plain text", b"officer1123" not in blob and b"admin123" not in blob)
 
     # ---- tracing still works without the plaintext copy
-    r = requests.post(API + f"/open/{d['doc_id']}", headers=H(o1))
+    r = requests.post(API + f"/open/{d['doc_id']}", headers=H(o1), json={"password": "officer1123"})
     open(os.path.join(TMP, "o1.png"), "wb").write(r.content)
     j = requests.post(API + "/trace", headers=H(adm), data={"doc_id": d["doc_id"]},
                       files={"file": ("l.png", open(os.path.join(TMP, "o1.png"), "rb"), "image/png")}).json()
@@ -119,7 +119,7 @@ def main():
 
     # ---- access control between officers
     check("officer2 cannot open a document shared only with officer1",
-          requests.post(API + f"/open/{d['doc_id']}", headers=H(o2)).status_code == 403)
+          requests.post(API + f"/open/{d['doc_id']}", headers=H(o2), json={"password": "officer2123"}).status_code == 403)
     check("officer2 does not even see it in their list",
           all(x["doc_id"] != d["doc_id"] for x in requests.get(API + "/documents", headers=H(o2)).json()))
 
@@ -169,8 +169,90 @@ def main():
         data = bytearray(open(ct, "rb").read())
         data[50] ^= 1
         open(ct, "wb").write(bytes(data))
-        rr = requests.post(API + f"/open/{d['doc_id']}", headers=H(o1))
+        rr = requests.post(API + f"/open/{d['doc_id']}", headers=H(o1), json={"password": "officer1123"})
         check("a modified ciphertext on disk is refused, not decrypted", rr.status_code == 500 and b"modified" in rr.content)
+
+    # ---- v5: a stolen database alone is useless
+    if db_path:
+        import sqlite3
+        import oqs
+        from Crypto.Protocol.SecretSharing import Shamir
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        con = sqlite3.connect(db_path)
+        rows = con.execute("SELECT idx, half1, half2 FROM shares WHERE doc_id=?", (d["doc_id"],)).fetchall()
+        doc_row = con.execute("SELECT nonce, ct_path FROM documents WHERE doc_id=?", (d["doc_id"],)).fetchone()
+        check("key shares in the database are sealed (not raw 16-byte Shamir shares)", rows and all(len(r[1]) != 16 for r in rows))
+        broke = False
+        try:
+            h1 = Shamir.combine([(r[0], r[1][:16]) for r in rows[:3]])
+            h2 = Shamir.combine([(r[0], r[2][:16]) for r in rows[:3]])
+            AESGCM(h1 + h2).decrypt(doc_row[0], open(doc_row[1], "rb").read(), b"NISHAAN-v4")
+            broke = True
+        except Exception:
+            pass
+        check("a stolen database alone can NOT rebuild a document key (node key files needed)", not broke)
+        users = con.execute("SELECT username, dsa_sk, keys_sealed FROM users").fetchall()
+        check("no private key is stored unsealed", all(u[2] == 1 for u in users))
+        forged = False
+        try:
+            oqs.Signature("ML-DSA-65", secret_key=users[0][1]).sign(b"forged receipt")
+            forged = True
+        except Exception:
+            pass
+        check("a private key copied from the database can NOT sign (sealed under the password)", not forged)
+
+        # the audit log is hash-chained: a quiet edit is detected
+        eid, detail = con.execute("SELECT id, detail FROM events ORDER BY id LIMIT 1 OFFSET 3").fetchone()
+        con.execute("UPDATE events SET detail=? WHERE id=?", ("nothing happened here", eid))
+        con.commit()
+        v = requests.get(API + "/audit/verify", headers=H(adm)).json()
+        check("a quietly edited audit-log entry is detected", not v["ok"] and v["first_bad_event"] == eid, v)
+        con.execute("UPDATE events SET detail=? WHERE id=?", (detail, eid))
+        con.commit()
+        check("audit log verifies again once restored", requests.get(API + "/audit/verify", headers=H(adm)).json()["ok"])
+
+        # v5.1: an insider deletes the newest ledger record straight from the database
+        d2 = requests.post(API + "/documents", headers=H(adm), data={"recipients": "officer1"},
+                           files={"file": ("s2.png", open(os.path.join(TMP, "s.png"), "rb"), "image/png")}).json()
+        requests.post(API + f"/open/{d2['doc_id']}", headers=H(o1), json={"password": "officer1123"})
+        last = con.execute("SELECT idx FROM blocks ORDER BY idx DESC LIMIT 1").fetchone()
+        con.execute("DELETE FROM blocks WHERE idx=?", (last[0],))
+        con.commit()
+        v = requests.get(API + "/ledger/verify", headers=H(adm)).json()
+        check("a ledger record deleted straight from the database is caught by the node copies",
+              not v["ok"] and any(b.get("deleted") and b["index"] == last[0] for b in v["blocks"]), v)
+        v = requests.post(API + "/ledger/restore", headers=H(adm)).json()
+        check("the deleted record is rebuilt from the node copies", v["ok"] and v["latest"] == last[0], v)
+        con.close()
+
+    # ---- v5: sign-to-open brute force, two-person rule, revocation bypass
+    for _ in range(5):
+        requests.post(API + f"/open/{d['doc_id']}", headers=H(o2), json={"password": "guess"})
+    o3 = login("officer3").json()["token"]
+    d3 = requests.post(API + "/documents", headers=H(adm), data={"recipients": "officer3"},
+                       files={"file": ("s.png", open(os.path.join(TMP, "s.png"), "rb"), "image/png")}).json()
+    for _ in range(5):
+        requests.post(API + f"/open/{d3['doc_id']}", headers=H(o3), json={"password": "guess"})
+    r = requests.post(API + f"/open/{d3['doc_id']}", headers=H(o3), json={"password": "officer3123"})
+    check("guessing the password at sign-to-open locks the account", r.status_code == 429, r.status_code)
+    sec = login("security").json()["token"]
+    d4 = requests.post(API + "/documents", headers=H(adm), data={"recipients": "officer1"},
+                       files={"file": ("s.png", open(os.path.join(TMP, "s.png"), "rb"), "image/png")}).json()
+    r = requests.post(API + f"/open/{d4['doc_id']}", headers=H(o1), json={"password": "officer1123"})
+    open(os.path.join(TMP, "o1b.png"), "wb").write(r.content)
+    j = requests.post(API + "/trace", headers=H(sec), data={"doc_id": d4["doc_id"]},
+                      files={"file": ("l.png", open(os.path.join(TMP, "o1b.png"), "rb"), "image/png")}).json()
+    r = requests.post(API + f"/cases/{j['case_id']}/decision", headers=H(sec), json={"approve": True})
+    check("two-person rule can't be bypassed by the same Security Officer", r.status_code == 403)
+    check("evidence of an unconfirmed case can't be downloaded",
+          requests.get(API + f"/cases/{j['case_id']}/bundle", headers=H(adm)).status_code == 409)
+    check("an officer can't reach the evidence endpoints",
+          requests.get(API + f"/cases/{j['case_id']}/report", headers=H(o1)).status_code == 403)
+    requests.post(API + f"/documents/{d4['doc_id']}/access", headers=H(adm), json={"username": "officer1", "allow": False})
+    r = requests.post(API + f"/open/{d4['doc_id']}", headers=H(o1), json={"password": "officer1123"})
+    check("a revoked officer is refused even with a valid session and password", r.status_code == 403)
+    r = requests.post(API + "/documents/" + d4["doc_id"] + "/access", headers=H(sec), json={"allow": False})
+    check("the Security Officer can't withdraw documents (admin only)", r.status_code == 403)
 
     print()
     if FAILS:

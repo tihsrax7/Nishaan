@@ -59,7 +59,8 @@ def pages_to_pdf(pages: list[np.ndarray], officer_id: int, tag_text: str | None 
         page = doc.new_page(width=page_w, height=page_h)
         page.insert_image(pymupdf.Rect(0, 0, page_w, page_h), stream=buf.tobytes())
 
-    subject = tag_text or watermark.tag_text(f"NISHAAN copy for officer #{officer_id:02d}", officer_id)
+    # officer_id here is the 16-bit mark (a session mark in v5.1); the visible text reveals nothing
+    subject = tag_text or watermark.tag_text("NISHAAN secured copy", officer_id)
     doc.set_metadata({"subject": subject, "title": title, "producer": "NISHAAN", "creator": "NISHAAN"})
     out = doc.tobytes(garbage=3, deflate=True)
     doc.close()

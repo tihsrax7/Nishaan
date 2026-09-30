@@ -119,19 +119,17 @@ def embed_pixel(img: np.ndarray, officer_id: int, key=7, delta=DELTA, repeats=4)
     return cv2.cvtColor(ycc, cv2.COLOR_YCrCb2BGR)
 
 
-def extract_pixel_detail(img: np.ndarray, ref: np.ndarray, key=7, n=16):
-    """Returns (officer_id, confidence 0..1, blocks_used).
-    ref: the ORIGINAL unmarked page (server keeps it per doc_id).
-    img: suspect/leaked page, gray or colour, any size -- resized to ref first.
-    confidence = how one-sided the block votes were, averaged over the 16 bits
-    (1.0 = every block agreed; ~0 = noise, i.e. no NISHAAN mark found)."""
+def extract_pixel_full(img: np.ndarray, ref: np.ndarray, key=7, n=16) -> dict:
+    """Reads the mark and returns everything the evidence report needs:
+    officer_id, confidence, blocks used, and per-bit vote margins (for the
+    wrong-match probability). ref: the ORIGINAL unmarked page (rebuilt in memory)."""
     ref_y = to_luma(ref)
     hh, ww = ref_y.shape
     sus_y = cv2.resize(to_luma(img), (ww, hh), interpolation=cv2.INTER_AREA).astype(np.float64)
     rows, cols = _smooth_block_coords(ref_y)
     nb = len(rows)
     if nb < n:
-        return None, 0.0, nb
+        return {"officer_id": None, "confidence": 0.0, "blocks": nb, "margins": [], "per_bit": []}
     order = np.random.default_rng(key).permutation(nb)
     sel = _as_blocks(sus_y)[rows, cols]
     cp, cq = _pq(sel)
@@ -141,7 +139,29 @@ def extract_pixel_detail(img: np.ndarray, ref: np.ndarray, key=7, n=16):
     votes = np.bincount(slot, weights=sign, minlength=n)
     per_bit = np.bincount(slot, minlength=n)
     conf = float(np.mean(np.abs(votes) / np.maximum(per_bit, 1)))
-    return bits_to_officer([1 if v > 0 else 0 for v in votes]), conf, nb
+    return {"officer_id": bits_to_officer([1 if v > 0 else 0 for v in votes]), "confidence": conf, "blocks": nb,
+            "margins": [int(abs(v)) for v in votes], "per_bit": [int(m) for m in per_bit]}
+
+
+def false_match_log10(margins, per_bit) -> float:
+    """Upper bound (log10) on the chance that a copy WITHOUT this officer's mark would read back
+    as this officer's number this strongly, by pure chance. Each block vote is then a fair coin
+    flip, so by Hoeffding's inequality a bit with margin s over m votes has
+    P <= 2 exp(-s^2 / 2m). The 16 bits use disjoint blocks, so the bounds multiply."""
+    import math
+    total = 0.0
+    for s_, m in zip(margins, per_bit):
+        if m:
+            total += min(0.0, math.log10(2) - (s_ * s_) / (2 * m) / math.log(10))
+    return total
+
+
+def extract_pixel_detail(img: np.ndarray, ref: np.ndarray, key=7, n=16):
+    """Returns (officer_id, confidence 0..1, blocks_used).
+    confidence = how one-sided the block votes were, averaged over the 16 bits
+    (1.0 = every block agreed; ~0 = noise, i.e. no NISHAAN mark found)."""
+    r = extract_pixel_full(img, ref, key, n)
+    return r["officer_id"], r["confidence"], r["blocks"]
 
 
 def extract_pixel(img: np.ndarray, ref: np.ndarray, key=7, n=16) -> int:

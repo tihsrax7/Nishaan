@@ -85,31 +85,31 @@ input.form:focus,select.form:focus{border-color:var(--teal);box-shadow:0 0 0 3px
 .banner b{color:var(--nav-fg);font-weight:700}
 .sidenav{background:var(--nav);color:var(--nav-fg);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:thin;
   background-image:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 220px)}
-.brand{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 20px 20px;color:var(--nav-fg);text-align:center;border-bottom:1px solid var(--nav-line)}
+.brand{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 20px 16px;color:var(--nav-fg);text-align:center;border-bottom:1px solid var(--nav-line)}
 .brand:hover{text-decoration:none}
-.brand svg{width:46px;height:46px;color:var(--nav-fg)}
+.brand svg{width:40px;height:40px;color:var(--nav-fg)}
 .brand .wordmark{font-size:23px;line-height:1;margin-right:-.2em}
 .brand .tag{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--nav-muted);font-weight:400}
 .brand .orn{display:flex;align-items:center;gap:8px;width:120px;color:var(--nav-muted)}
 .brand .orn::before,.brand .orn::after{content:"";flex:1;height:1px;background:currentColor;opacity:.5}
 .brand .orn i{width:5px;height:5px;transform:rotate(45deg);border:1px solid currentColor}
-.tabs{padding:14px 12px 8px;flex:1}
-.tabs .grp{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--nav-muted);padding:14px 12px 6px;font-weight:400}
+.tabs{padding:10px 12px 6px;flex:1}
+.tabs .grp{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--nav-muted);padding:11px 12px 4px;font-weight:400}
 .tabs .grp:first-child{padding-top:4px}
-.tabs a{display:flex;align-items:center;gap:12px;color:#c9d3e8;font-weight:400;font-size:16px;padding:8px 12px;border-radius:4px;position:relative;margin:1px 0}
+.tabs a{display:flex;align-items:center;gap:12px;color:#c9d3e8;font-weight:400;font-size:16px;padding:6px 12px;border-radius:4px;position:relative;margin:1px 0}
 .tabs a svg.ic{width:17px;height:17px;color:var(--nav-muted)}
 .tabs a:hover{text-decoration:none;background:rgba(255,255,255,.06);color:var(--nav-fg)}
 .tabs a.on{background:rgba(255,255,255,.1);color:var(--nav-fg);font-weight:700}
 .tabs a.on::before{content:"";position:absolute;left:-12px;top:6px;bottom:6px;width:3px;background:var(--nav-hi);border-radius:0 2px 2px 0}
 .tabs a.on svg.ic{color:var(--nav-hi)}
 .tabs .counter{margin-left:auto;background:rgba(255,255,255,.14);color:var(--nav-fg)}
-.sn-foot{padding:14px 16px 18px;border-top:1px solid var(--nav-line);display:flex;flex-direction:column;gap:12px}
-.nodebox{display:block;width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid var(--nav-line);border-radius:4px;padding:10px 12px;color:var(--nav-fg);cursor:pointer}
+.sn-foot{padding:12px 16px 14px;border-top:1px solid var(--nav-line);display:flex;flex-direction:column;gap:10px}
+.nodebox{display:block;width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid var(--nav-line);border-radius:4px;padding:8px 12px;color:var(--nav-fg);cursor:pointer}
 .nodebox:hover{background:rgba(255,255,255,.08)}
 .nodebox .t{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--nav-muted)}
 .nodebox .t b{letter-spacing:.12em;font-weight:700}
 .nodebox .t b.ok{color:#7ad3a4} .nodebox .t b.bad{color:#ff8f96}
-.nodebox .bars{display:flex;gap:4px;margin:8px 0 6px}
+.nodebox .bars{display:flex;gap:4px;margin:6px 0 4px}
 .nodebox .bars i{flex:1;height:6px;border-radius:1px;background:rgba(255,255,255,.14)}
 .nodebox .bars i.on{background:#7ad3a4}
 .nodebox .s{font-size:13.5px;color:#c9d3e8}
@@ -150,7 +150,27 @@ hr.rule{border:0;border-top:1px solid var(--border);margin:24px 0}
 .kpi .v{font-size:30px;font-weight:700;line-height:1.15;margin-top:4px;font-variant-numeric:lining-nums tabular-nums}
 .kpi .v small{font-size:16px;color:var(--muted);font-weight:400}
 .kpi .n{font-size:13px;color:var(--muted)}
-.kpi.ok{border-top-color:var(--ok)} .kpi.bad{border-top-color:var(--bad)}
+.kpi.ok{border-top-color:var(--ok)} .kpi.bad{border-top-color:var(--bad)} .kpi.warn{border-top-color:var(--warn)}
+
+/* dialog */
+.modal{position:fixed;inset:0;background:rgba(6,16,36,.55);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--border-2);border-top:3px solid var(--teal);border-radius:4px;box-shadow:var(--pop);padding:24px 26px 20px}
+.modal-card .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.modal-card h3{font-size:24px;font-weight:700;margin:4px 0 8px;line-height:1.2}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+/* risk + cases */
+.risk{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border-2)}
+.risk:first-of-type{border-top:0}
+.risk .nm{flex:1;min-width:0}
+.risk .bar{width:90px;height:6px;background:var(--inset);border-radius:1px;overflow:hidden}
+.risk .bar span{display:block;height:100%;background:var(--warn)}
+.risk .bar span.hi{background:var(--bad)}
+.risk .sc{width:28px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.case-id{font-weight:700;letter-spacing:.06em;font-variant-numeric:tabular-nums;min-width:62px}
+.steps2{display:flex;gap:0;margin:0 0 20px;border:1px solid var(--border-2);border-radius:4px;overflow:hidden;background:var(--panel)}
+.steps2 div{flex:1;padding:12px 16px;border-left:1px solid var(--border-2);font-size:14px;color:var(--fg-2)}
+.steps2 div:first-child{border-left:0}
+.steps2 b{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:2px}
 
 /* cards */
 .box{background:var(--panel);border:1px solid var(--border-2);border-radius:4px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
@@ -233,6 +253,18 @@ table.t tbody tr:hover td{background:var(--panel-2)}
 .viewer img{display:block;max-width:100%;margin:0 auto;box-shadow:var(--shadow)}
 .viewer iframe{display:block;width:100%;height:80vh;border:0;background:#fff}
 .viewer .imgwrap{padding:18px;background:var(--inset)}
+/* protected viewer: no screenshots, printing, copying or dragging of the document */
+.protected{position:relative;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.protected img{pointer-events:none;-webkit-user-drag:none;user-select:none;display:block;max-width:100%;margin:0 auto}
+.protected .pages{padding:18px;background:var(--inset);display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow:auto}
+.protected .pages img{box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.shield-cover{display:none;position:absolute;inset:0;z-index:6;background:#0b1d3a;color:#fff;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:28px;cursor:pointer}
+.shield-cover b{font-size:18px;letter-spacing:.04em}
+.shield-cover span{max-width:420px;color:#c9d4e6;font-size:14px;line-height:1.5}
+body.shielded .shield-cover{display:flex}
+body.shielded .protected img{visibility:hidden}
+.protect-note{display:flex;gap:8px;align-items:center;padding:8px 16px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--border-2)}
+@media print{body.protect-on *{visibility:hidden !important}body.protect-on::after{content:"Printing is disabled for protected NISHAAN documents.";visibility:visible;display:block;padding:40px;font:16px serif}}
 
 .tl-date{display:flex;align-items:center;gap:8px;color:var(--muted);margin:22px 0 10px;font-size:11.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
 .tl-date svg.ic{color:var(--teal)}
@@ -281,6 +313,7 @@ table.t tbody tr:hover td{background:var(--panel-2)}
 .lg-err{margin-bottom:16px}
 .lg-tools{margin-top:16px;display:flex;gap:10px;align-items:center;color:var(--muted);font-size:13px}
 
+.acct button.admin + button.admin{margin-top:0}
 #toast{position:fixed;right:20px;bottom:20px;z-index:60;max-width:min(460px,calc(100vw - 40px));background:var(--panel);color:var(--fg);padding:12px 16px;border-radius:4px;box-shadow:var(--pop);display:flex;gap:10px;align-items:center;border-left:4px solid var(--ok)}
 #toast>svg{color:var(--ok)}
 #toast.bad{border-left-color:var(--bad)} #toast.bad>svg{color:var(--bad)}
@@ -317,7 +350,7 @@ footer.ft{border-top:1px solid var(--border);color:var(--muted);font-size:12px;l
       <div class="lg-rule"></div>
       <div class="tg">Secure distribution and leak attribution for classified documents.</div>
       <ul class="lg-tenets">
-        <li><span>I.</span>Every copy carries its reader’s mark, visible and invisible.</li>
+        <li><span>I.</span>Every copy carries its reader’s invisible mark, tied to the exact opening.</li>
         <li><span>II.</span>Every opening is signed and approved by four of five ledger nodes.</li>
         <li><span>III.</span>Every record is sealed on a tamper-evident ledger.</li>
       </ul>
@@ -364,6 +397,7 @@ footer.ft{border-top:1px solid var(--border);color:var(--muted);font-size:12px;l
   </div>
 </div>
 <div id="toast" class="hidden" role="status"></div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModal()"><div class="modal-card" id="modalCard"></div></div>
 
 <!-- ================================================================ ICONS (original line icons) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -401,14 +435,20 @@ const API = location.protocol.startsWith("http") ? location.origin : "http://loc
 let TOKEN=null, ME=null, USERS=[], DOCS=[], NODES=null, OBJ_URL=null, FLASH=null;
 const NAV = {
   admin:   [["Distribution",[["documents","Documents","i-doc"],["share","Share a document","i-upload"]]],
-            ["Evidence",[["ledger","Ledger","i-chain"],["trace","Trace a leak","i-search"],["audit","Audit log","i-log"]]],
+            ["Evidence",[["ledger","Ledger","i-chain"],["trace","Trace a leak","i-search"],["cases","Leak cases","i-shield"]]],
+            ["Oversight",[["watch","Insider watch","i-alert"],["audit","Audit log","i-log"]]],
             ["Administration",[["nodes","Ledger nodes","i-server"],["people","People","i-people"],["settings","Settings","i-gear"]]]],
+  security:[["Oversight",[["watch","Insider watch","i-alert"],["cases","Leak cases","i-shield"],["audit","Audit log","i-log"]]],
+            ["Evidence",[["documents","All documents","i-doc"],["trace","Trace a leak","i-search"],["ledger","Ledger","i-chain"]]],
+            ["Account",[["settings","Settings","i-gear"]]]],
   officer: [["Documents",[["documents","My documents","i-doc"]]],
             ["Evidence",[["ledger","Ledger","i-chain"]]],
             ["Account",[["settings","My keys","i-key"]]]],
 };
-const TABS = { admin: NAV.admin.flatMap(g=>g[1]), officer: NAV.officer.flatMap(g=>g[1]) };
-const DEMO = [["admin","admin123","Administrator","Distribution Officer"]].concat(Array.from({length:10},(_,i)=>[`officer${i+1}`,`officer${i+1}123`,`Officer ${i+1}`,`#${String(i+1).padStart(2,"0")}`]));
+const TABS = Object.fromEntries(Object.entries(NAV).map(([k,v])=>[k,v.flatMap(g=>g[1])]));
+const ROLE_NAME = {admin:"Distribution Officer", security:"Security Officer"};
+const isStaff = () => ME && ME.role!=="officer";
+const DEMO = [["admin","admin123","Administrator","Distribution Officer"],["security","security123","Security Officer","Confirms leak findings"]].concat(Array.from({length:10},(_,i)=>[`officer${i+1}`,`officer${i+1}123`,`Officer ${i+1}`,`#${String(i+1).padStart(2,"0")}`]));
 
 /* ---------------------------------------------------------------- helpers */
 const $ = id => document.getElementById(id);
@@ -473,7 +513,7 @@ function toggleTheme(){
 syncThemeLabels();
 
 /* ---------------------------------------------------------------- sign in */
-$("acctGrid").innerHTML=DEMO.map(([u,p,n,r])=>u==="admin"
+$("acctGrid").innerHTML=DEMO.map(([u,p,n,r])=>(u==="admin"||u==="security")
   ? `<button type="button" class="admin" onclick="fillLogin('${u}','${p}')" data-u="${u}"><span><b>${esc(n)}</b><span>${esc(r)}</span></span><span class="mono">${u} / ${p}</span></button>`
   : `<button type="button" onclick="fillLogin('${u}','${p}')" data-u="${u}"><b>${esc(n)}</b><span>${u}</span></button>`).join("");
 function fillLogin(u,p){ $("lu").value=u; $("lp").value=p; showLoginError(""); $("loginBtn").focus(); }
@@ -492,7 +532,7 @@ function doLogin(btn){ return busy(btn,"Signing in…",async()=>{
   await enterApp(true);
 });}
 function logout(){
-  TOKEN=null; ME=null; Q=""; VERIFY=null; AUDIT_FILTER="all"; $("q").value=""; try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
+  TOKEN=null; ME=null; Q=""; VERIFY=null; AUDIT_FILTER="all"; $("q").value=""; clearTimeout(IDLE_T); closeModal(); try{ sessionStorage.removeItem("nishaan_token"); }catch(_){}
   if(OBJ_URL){ URL.revokeObjectURL(OBJ_URL); OBJ_URL=null; }
   $("toast").classList.add("hidden"); $("app").classList.add("hidden"); $("app").style.display=""; $("login").classList.remove("hidden");
   history.replaceState(null,"",location.pathname); $("lu").focus();
@@ -500,9 +540,36 @@ function logout(){
 async function enterApp(fresh){
   $("login").classList.add("hidden"); $("app").classList.remove("hidden"); $("app").style.display="grid";
   USERS=await (await api("/users")).json();
-  $("userCard").innerHTML=`${avatar(ME.username,36)}<div class="nm"><b>${esc(ME.name)}</b><span>${ME.role==="admin"?"Distribution Officer":"Officer #"+pad(ME.officer_id)} · ${esc(ME.username)}</span></div>`;
-  syncThemeLabels(); await refreshNodes();
-  if(fresh||!location.hash) go("#/documents"); else route();
+  $("userCard").innerHTML=`${avatar(ME.username,36)}<div class="nm"><b>${esc(ME.name)}</b><span>${ROLE_NAME[ME.role]||"Officer #"+pad(ME.officer_id)} · ${esc(ME.username)}</span></div>`;
+  syncThemeLabels(); await refreshNodes(); bumpIdle();
+  if(fresh||!location.hash) go(ME.role==="security"?"#/watch":"#/documents"); else route();
+}
+/* automatic sign-out after 10 minutes without activity */
+let IDLE_T; const IDLE_MS=10*60*1000;
+function bumpIdle(){ if(!TOKEN) return; clearTimeout(IDLE_T);
+  IDLE_T=setTimeout(()=>{ if(TOKEN){ logout(); showLoginError("You were signed out automatically after 10 minutes without activity."); } },IDLE_MS); }
+["click","keydown","mousemove","scroll","touchstart"].forEach(e=>document.addEventListener(e,bumpIdle,{passive:true}));
+/* dialog */
+function openModal(html){ $("modalCard").innerHTML=html; $("modal").classList.remove("hidden"); const f=$("modalCard").querySelector("input,textarea"); if(f) setTimeout(()=>f.focus(),30); }
+function closeModal(){ $("modal").classList.add("hidden"); $("modalCard").innerHTML=""; }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("modal").classList.contains("hidden")) closeModal(); });
+async function downloadAuth(btn,path,filename){ return busy(btn,`${SPIN}Preparing…`,async()=>{
+  const r=await api(path); if(!r.ok) throw new Error(await errText(r));
+  const u=URL.createObjectURL(await r.blob()), a=document.createElement("a");
+  a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
+  toast(filename+" downloaded"); }); }
+function odds(l){ if(l==null) return "—"; const e=Math.floor(-l);
+  return e>=100?"less than 1 in 10<sup>100</sup>":e>=12?`less than 1 in 10<sup>${e}</sup>`:`less than 1 in ${Math.pow(10,e).toLocaleString("en-IN")}`; }
+function statusLabel(d){ return d.status==="withdrawn"?'<span class="label solid-red">Withdrawn</span>':d.status==="expired"?'<span class="label">Access closed</span>':""; }
+function windowText(d){ return !d.expires_at?"":d.status==="expired"?"access window closed "+ago(d.expires_at):"access until "+fullDate(d.expires_at); }
+async function refreshBadges(){
+  if(!isStaff()) return;
+  try{ const [cs,al]=await Promise.all([api("/cases").then(r=>r.json()),api("/alerts").then(r=>r.json())]);
+    const pend=cs.filter(c=>c.status==="PENDING").length, hi=(al.counts.critical||0)+(al.counts.high||0);
+    const a=$("casesCount"), b=$("watchCount");
+    if(a){ a.textContent=pend; a.style.display=pend?"":"none"; } if(b){ b.textContent=hi; b.style.display=hi?"":"none"; }
+    return {cs,al};
+  }catch(_){}
 }
 function tick(){ const el=$("clock"); if(!el) return; const d=new Date();
   const t=d.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false});
@@ -513,19 +580,21 @@ tick(); setInterval(tick,20000);
 function go(h){ if(location.hash===h) route(); else location.hash=h; }
 window.addEventListener("hashchange",()=>{ if(ME) route(); });
 function renderTabs(active){
-  $("tabs").innerHTML=NAV[ME.role].map(([g,items])=>`<div class="grp">${esc(g)}</div>`+items.map(([k,l,i])=>`<a href="#/${k}" class="${k===active?"on":""}" data-tab="${k}">${ic(i)}<span>${esc(l)}</span>${k==="documents"?`<span class="counter" id="docCount" style="${DOCS.length?"":"display:none"}">${DOCS.length}</span>`:""}</a>`).join("")).join("");
+  $("tabs").innerHTML=NAV[ME.role].map(([g,items])=>`<div class="grp">${esc(g)}</div>`+items.map(([k,l,i])=>`<a href="#/${k}" class="${k===active?"on":""}" data-tab="${k}">${ic(i)}<span>${esc(l)}</span>${k==="documents"?`<span class="counter" id="docCount" style="${DOCS.length?"":"display:none"}">${DOCS.length}</span>`:k==="cases"?`<span class="counter" id="casesCount" style="display:none"></span>`:k==="watch"?`<span class="counter" id="watchCount" style="display:none"></span>`:""}</a>`).join("")).join("");
 }
 async function route(){
+  protectOff();
   const raw=(location.hash||"#/documents").slice(2), [path,qs]=raw.split("?"), parts=path.split("/");
   let view=parts[0]||"documents"; const arg=parts[1];
   if(!TABS[ME.role].map(t=>t[0]).concat(["doc","settings"]).includes(view)) view="documents";
   renderTabs(view==="doc"?"documents":view);
-  $("crumb").textContent={documents:ME.role==="admin"?"Documents":"My documents",doc:"Document",share:"Share",ledger:"Ledger",trace:"Trace a leak",nodes:"Nodes",people:"People",audit:"Audit log",settings:ME.role==="admin"?"Settings":"My keys"}[view];
+  $("crumb").textContent={documents:ME.role==="admin"?"Documents":ME.role==="security"?"All documents":"My documents",doc:"Document",share:"Share",ledger:"Ledger",trace:"Trace a leak",nodes:"Nodes",people:"People",audit:"Audit log",cases:"Leak cases",watch:"Insider watch",settings:ME.role==="officer"?"My keys":"Settings"}[view];
   $("searchBox").style.visibility = view==="documents" ? "visible" : "hidden";
   if(OBJ_URL){ URL.revokeObjectURL(OBJ_URL); OBJ_URL=null; }
   V().innerHTML=`<div style="padding:48px;text-align:center">${SPIN}</div>`;
   window.scrollTo(0,0);
-  try{ await ({documents:vDocuments,doc:()=>vDoc(arg,qs==="open"),share:vShare,ledger:vLedger,trace:()=>vTrace(arg),nodes:vNodes,people:vPeople,audit:vAudit,settings:vSettings})[view](); }
+  refreshBadges();
+  try{ await ({documents:vDocuments,doc:()=>vDoc(arg,qs==="open"),share:vShare,ledger:vLedger,trace:()=>vTrace(arg),nodes:vNodes,people:vPeople,audit:vAudit,settings:vSettings,cases:vCases,watch:vWatch})[view](); }
   catch(e){ if(e.message!=="__signedout") V().innerHTML=`<div class="flash error">${ic("i-x-circle")}<div>${esc(cap(e.message))}</div></div>`; }
 }
 
@@ -545,6 +614,7 @@ function sidebar(){
     <div class="sb"><h3>About</h3>
       <p style="margin:0 0 12px">Documents are encrypted once. Each opening is signed by the officer, approved by the ledger nodes and recorded permanently. Every copy carries an invisible mark that identifies its reader.</p>
       <div class="line">${ic("i-shield")}<span>Post-quantum signatures (ML-DSA-65)</span></div>
+      <div class="line">${ic("i-key")}<span>Private keys sealed with each officer's password</span></div>
       <div class="line">${ic("i-lock")}<span>AES-256-GCM, key split 3-of-5</span></div>
       <div class="line">${ic("i-chain")}<span>Tamper-evident SHA3-256 ledger</span></div></div>
     <div class="sb"><h3>Ledger nodes</h3>
@@ -560,26 +630,31 @@ function sidebar(){
 let Q="";
 function onSearch(){ Q=$("q").value.trim().toLowerCase(); const el=$("docRows"); if(el) el.innerHTML=docRows(); }
 function docRows(){
-  const admin=ME.role==="admin";
+  const admin=isStaff();
   const list=DOCS.filter(d=>!Q||(d.title+" "+d.filename+" "+d.classification+" "+d.doc_id).toLowerCase().includes(Q));
   if(!list.length) return `<div class="empty"><span class="muted">No documents match “${esc(Q)}”.</span></div>`;
   return list.map(d=>`<div class="row" data-doc="${d.doc_id}" data-cls="${esc(d.classification)}">
       ${ic("i-doc","ic-muted")}
-      <div class="main"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="tt" href="#/doc/${d.doc_id}">${esc(d.title)}</a>${clsLabel(d.classification)}</div>
-        <div class="meta">${kindLabel(d)} · ${admin?"Shared with "+d.recipients.map(u=>esc(user(u).name)).join(", "):"Shared by "+esc(user(d.created_by).name)} · ${when(d.created_at)}</div></div>
+      <div class="main"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="tt" href="#/doc/${d.doc_id}">${esc(d.title)}</a>${clsLabel(d.classification)}${statusLabel(d)}</div>
+        <div class="meta">${kindLabel(d)} · ${admin?"Shared with "+(d.recipients.map(u=>esc(user(u).name)).join(", ")||"nobody"):"Shared by "+esc(user(d.created_by).name)} · ${when(d.created_at)}${d.expires_at?" · "+esc(windowText(d)):""}</div></div>
       <div class="right"><span class="muted small nowrap">${d.opens} opening${d.opens===1?"":"s"}</span>
-        ${admin?`<a class="btn sm" href="#/trace/${d.doc_id}">Trace leak</a>`:`<a class="btn sm primary" href="#/doc/${d.doc_id}?open">${ic("i-unlock")}Open</a>`}</div>
+        ${admin?`<a class="btn sm" href="#/trace/${d.doc_id}">Trace leak</a>`:d.status==="active"?`<a class="btn sm primary" href="#/doc/${d.doc_id}?open">${ic("i-unlock")}Open</a>`:`<span class="label">Locked</span>`}</div>
     </div>`).join("");
 }
 async function vDocuments(){
   await loadDocs(); await refreshNodes();
-  const admin=ME.role==="admin";
-  const head=`<div class="pagehead"><h2>${admin?"Documents":"My documents"}</h2>${admin?`<a class="btn primary" href="#/share">${ic("i-upload")}Share document</a>`:""}</div>`;
+  const admin=isStaff(), sharer=ME.role==="admin";
+  const head=`<div class="pagehead"><h2>${sharer?"Documents":admin?"All documents":"My documents"}</h2>${sharer?`<a class="btn primary" href="#/share">${ic("i-upload")}Share document</a>`:""}</div>`;
+  let attn="", pendMine=0;
+  if(admin){ const x=await refreshBadges(); if(x){
+    pendMine=x.cs.filter(c=>c.status==="PENDING"&&c.requested_by!==ME.username).length;
+    const hi=(x.al.counts.critical||0)+(x.al.counts.high||0);
+    if(pendMine||hi) attn=`<div class="flash warn">${ic("i-alert")}<div><b>Needs your attention.</b> ${pendMine?`<a href="#/cases">${pendMine} leak case${pendMine===1?"":"s"} awaiting your confirmation</a>`:""}${pendMine&&hi?" &nbsp;·&nbsp; ":""}${hi?`<a href="#/watch">${hi} high-risk alert${hi===1?"":"s"} in Insider watch</a>`:""}</div></div>`; } }
   const body = !DOCS.length
     ? `<div class="box"><div class="empty">${ic("i-doc","big")}<h3>${admin?"No documents yet":"No documents shared with you"}</h3>
-        <p class="muted">${admin?"Share a PDF or image with selected officers. It will be encrypted, and every opening will be recorded.":"When the Distribution Officer shares a document with you, it will appear here."}</p>
-        ${admin?`<a class="btn primary" href="#/share">${ic("i-upload")}Share your first document</a>`:""}</div></div>`
-    : `<div class="box"><div class="box-head"><b>${DOCS.length} document${DOCS.length===1?"":"s"}</b><span class="muted small">${admin?"Documents you have distributed":"Opening a document is signed with your key and recorded on the ledger"}</span></div><div id="docRows">${docRows()}</div></div>`;
+        <p class="muted">${sharer?"Share a PDF or image with selected officers. It will be encrypted, and every opening will be recorded.":admin?"Documents shared by the Distribution Officer will appear here.":"When the Distribution Officer shares a document with you, it will appear here."}</p>
+        ${sharer?`<a class="btn primary" href="#/share">${ic("i-upload")}Share your first document</a>`:""}</div></div>`
+    : `<div class="box"><div class="box-head"><b>${DOCS.length} document${DOCS.length===1?"":"s"}</b><span class="muted small">${sharer?"Documents you have distributed":admin?"Every document in the system":"Opening a document is signed with your key and recorded on the ledger"}</span></div><div id="docRows">${docRows()}</div></div>`;
   const up=NODES?NODES.nodes.filter(n=>n.online).length:0, q=NODES?NODES.quorum:4;
   const opens=DOCS.reduce((a,d)=>a+(d.opens||0),0), secret=DOCS.filter(d=>/SECRET/.test(d.classification)).length;
   const readers=new Set(DOCS.flatMap(d=>d.recipients||[])).size;
@@ -587,8 +662,9 @@ async function vDocuments(){
     <div class="kpi"><div class="k">${admin?"Documents distributed":"Shared with you"}</div><div class="v">${DOCS.length}</div><div class="n">${secret} classified Secret or above</div></div>
     <div class="kpi"><div class="k">Recorded openings</div><div class="v">${opens}</div><div class="n">each one signed and sealed</div></div>
     <div class="kpi ${up>=q?"ok":"bad"}"><div class="k">Ledger nodes</div><div class="v">${up}<small> / 5</small></div><div class="n">${up>=q?"quorum available":"documents locked"} · ${q} required</div></div>
-    <div class="kpi"><div class="k">${admin?"Authorised readers":"Your officer number"}</div><div class="v">${admin?readers:"#"+pad(ME.officer_id)}</div><div class="n">${admin?"officers holding marked copies":"printed on every copy you open"}</div></div></div>`;
-  V().innerHTML=flashHTML()+head+kpis+`<div class="layout"><div>${body}</div>${sidebar()}</div>`;
+    ${ME.role==="security"?`<div class="kpi ${pendMine?"warn":""}"><div class="k">Cases awaiting you</div><div class="v">${pendMine}</div><div class="n">two-person rule: you confirm or reject</div></div>`
+      :`<div class="kpi"><div class="k">${admin?"Authorised readers":"Your officer number"}</div><div class="v">${admin?readers:"#"+pad(ME.officer_id)}</div><div class="n">${admin?"officers holding marked copies":"printed on every copy you open"}</div></div>`}</div>`;
+  V().innerHTML=flashHTML()+head+attn+kpis+`<div class="layout"><div>${body}</div>${sidebar()}</div>`;
 }
 
 /* ---------------------------------------------------------------- Document page + open */
@@ -597,14 +673,15 @@ async function vDoc(id,autoOpen){
   const d=DOCS.find(x=>x.doc_id===id);
   if(!d){ V().innerHTML=`<div class="flash error">${ic("i-x-circle")}<div>This document does not exist or has not been shared with you. <a href="#/documents">Back to documents</a></div></div>`; return; }
   const blocks=(await (await api("/ledger")).json()).filter(b=>b.doc_id===id);
-  const admin=ME.role==="admin";
+  const admin=isStaff(), sharer=ME.role==="admin", locked=d.status!=="active";
   V().innerHTML=`${flashHTML()}
     <div style="margin-bottom:16px"><a href="#/documents" class="small">${ic("i-arrow-left")} ${admin?"Documents":"My documents"}</a></div>
     <div class="pagehead" style="margin-bottom:4px"><h2>${ic("i-doc","ic-muted")}<span style="word-break:break-word">${esc(d.title)}</span>${clsLabel(d.classification)}</h2>
-      ${admin?`<a class="btn" href="#/trace/${d.doc_id}">${ic("i-search")}Trace a leaked copy</a>`:`<button class="btn primary" id="openBtn" onclick="doOpen(this,'${d.doc_id}')">${ic("i-unlock")}Open document</button>`}</div>
-    <p class="sub">${kindLabel(d)} · shared by ${esc(user(d.created_by).name)} ${when(d.created_at)}</p>
+      ${admin?`<a class="btn" href="#/trace/${d.doc_id}">${ic("i-search")}Trace a leaked copy</a>`:`<button class="btn primary" id="openBtn" ${locked?"disabled":""} onclick="doOpen(this,'${d.doc_id}')">${ic("i-unlock")}Open document</button>`}</div>
+    <p class="sub">${kindLabel(d)} · shared by ${esc(user(d.created_by).name)} ${when(d.created_at)}${d.expires_at?" · "+esc(windowText(d)):""} ${statusLabel(d)}</p>
     <div class="layout"><div>
-      <div id="openArea">${admin?"":`<div class="flash info">${ic("i-info")}<div>Opening this document is <b>signed with your personal key</b> and <b>recorded permanently</b> on the ledger. The copy you receive carries an invisible mark that identifies you.</div></div>`}</div>
+      <div id="openArea">${admin?"":locked?`<div class="flash error">${ic("i-lock")}<div><b>This document is locked.</b> ${d.status==="withdrawn"?"The Distribution Officer has withdrawn it.":"Its access window has closed."} The ledger nodes will refuse any opening.</div></div>`
+        :`<div class="flash info">${ic("i-info")}<div>Opening this document is <b>signed with your personal key</b>, which is sealed with your password, and <b>recorded permanently</b> on the ledger. The copy you receive carries an invisible mark that points to this exact opening.</div></div>`}</div>
       <div id="hist">${histHTML(blocks)}</div>
     </div>
     <aside class="side">
@@ -612,11 +689,61 @@ async function vDoc(id,autoOpen){
         <div class="line">${ic("i-doc")}<span style="word-break:break-all">${esc(d.filename)}</span></div>
         <div class="line">${ic("i-clock")}<span>${esc(fullDate(d.created_at))}</span></div>
         <div class="line">${ic("i-copy")}<span>ID</span><span class="sha" onclick="copy('${d.doc_id}','Document ID')" title="Copy">${d.doc_id}</span></div>
-        <div class="line">${ic("i-lock")}<span>Ciphertext <span class="mono">${esc(d.ciphertext_sha3)}…</span></span></div></div>
-      <div class="sb" style="border:0"><h3>Recipients <span class="counter">${d.recipients.length}</span></h3>
-        ${d.recipients.map(u=>`<div class="line">${avatar(u,20)}<span><b>${esc(user(u).name)}</b> <span class="muted">#${pad(user(u).officer_id)}</span></span></div>`).join("")}</div>
+        <div class="line">${ic("i-lock")}<span>Ciphertext <span class="mono">${esc(d.ciphertext_sha3)}…</span></span></div>
+        <div class="line">${ic("i-shield")}<span>${d.visible_mark?"Copies show the reader’s name + invisible mark":"Copies look identical · invisible mark only"}</span></div></div>
+      <div class="sb"><h3>Recipients <span class="counter">${d.recipients.length}</span></h3>
+        ${d.recipients.map(u=>`<div class="line">${avatar(u,20)}<span><b>${esc(user(u).name)}</b> <span class="muted">#${pad(user(u).officer_id)}</span></span>${sharer?`<button class="btn sm danger" style="margin-left:auto" onclick="setAccess(this,'${d.doc_id}','${esc(u)}',false)">Revoke</button>`:""}</div>`).join("")||'<p class="muted" style="margin:0">Nobody currently has access.</p>'}
+        ${(d.revoked_recipients||[]).length&&admin?`<div class="small muted" style="margin-top:12px;letter-spacing:.14em;text-transform:uppercase">Access revoked</div>`+d.revoked_recipients.map(u=>`<div class="line">${avatar(u,20)}<span class="muted"><s>${esc(user(u).name)}</s></span>${sharer?`<button class="btn sm" style="margin-left:auto" onclick="setAccess(this,'${d.doc_id}','${esc(u)}',true)">Restore</button>`:""}</div>`).join(""):""}</div>
+      ${sharer?`<div class="sb"><h3>Access control</h3>
+        <p class="small" style="margin:0 0 12px">${d.status==="withdrawn"?"This document is withdrawn: the ledger nodes refuse every opening.":"Withdraw the document to stop every recipient at once. Nodes check this before every vote."}</p>
+        ${d.status==="withdrawn"?`<button class="btn block" onclick="setAccess(this,'${d.doc_id}',null,true)">Reinstate document</button>`:`<button class="btn danger block" onclick="setAccess(this,'${d.doc_id}',null,false)">${ic("i-lock")}Withdraw from everyone</button>`}</div>`:""}
     </aside></div>`;
-  if(autoOpen && !admin){ history.replaceState(null,"","#/doc/"+id); $("openBtn").click(); }
+  if(autoOpen && !admin && !locked){ history.replaceState(null,"","#/doc/"+id); $("openBtn").click(); }
+}
+/* ---------------------------------------------------------------- Protected viewer */
+let PROTECT=null, LAST_LOG=0;
+function protectOn(docId){ PROTECT={doc:docId}; document.body.classList.add("protect-on"); }
+function protectOff(){ PROTECT=null; document.body.classList.remove("protect-on","shielded"); }
+function shield(how){ if(!PROTECT) return; document.body.classList.add("shielded"); if(how) logProtect(how); }
+function unshield(){ document.body.classList.remove("shielded"); }
+function logProtect(how){
+  const t=Date.now(); if(t-LAST_LOG<3000) return; LAST_LOG=t;
+  api("/events/protect",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({doc_id:PROTECT.doc,how})}).catch(()=>{});
+}
+function wipeClipboard(){ try{ navigator.clipboard.writeText("Screenshot blocked: this NISHAAN document is protected."); }catch(_){} }
+// the page is hidden the moment focus leaves it (snipping tools, other apps), and on screenshot / print keys
+window.addEventListener("blur",()=>shield());
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) shield(); });
+document.addEventListener("keydown",e=>{
+  if(!PROTECT) return;
+  const k=e.key, mod=e.ctrlKey||e.metaKey;
+  if(k==="PrintScreen"){ e.preventDefault(); shield("PrintScreen key"); wipeClipboard(); return; }
+  if(k==="Meta"||k==="OS"){ shield(); return; }                       // Win+Shift+S, Cmd+Shift+3/4/5 start with this key
+  if(mod&&e.shiftKey&&["s","S","3","4","5","#","$","%"].includes(k)){ e.preventDefault(); shield("screenshot shortcut"); return; }
+  if(mod&&(k==="p"||k==="P")){ e.preventDefault(); shield("print shortcut"); return; }
+  if(mod&&["s","S","c","C"].includes(k)){ e.preventDefault(); }
+},true);
+document.addEventListener("keyup",e=>{ if(PROTECT&&e.key==="PrintScreen"){ shield("PrintScreen key"); wipeClipboard(); } },true);
+document.addEventListener("contextmenu",e=>{ if(PROTECT&&e.target.closest&&e.target.closest(".protected")) e.preventDefault(); });
+document.addEventListener("dragstart",e=>{ if(PROTECT&&e.target.closest&&e.target.closest(".protected")) e.preventDefault(); });
+window.addEventListener("beforeprint",()=>shield("print"));
+// PDF copies are made of page images: show them as images inside the protected viewer (no PDF plug-in toolbar)
+async function showPdfPages(blob, url, title){
+  const el=$("pdfPages"); if(!el) return;
+  const buf=new Uint8Array(await blob.arrayBuffer()), urls=[];
+  const find=(pat,from)=>{ outer: for(let i=from;i<=buf.length-pat.length;i++){ for(let j=0;j<pat.length;j++) if(buf[i+j]!==pat[j]) continue outer; return i; } return -1; };
+  const S=[115,116,114,101,97,109], E=[101,110,100,115,116,114,101,97,109];   // "stream" / "endstream"
+  let pos=0;
+  while(true){
+    const st=find(S,pos); if(st<0) break;
+    let d=st+6; if(buf[d]===13) d++; if(buf[d]===10) d++;
+    const en=find(E,d); if(en<0) break;
+    if(buf[d]===0xFF&&buf[d+1]===0xD8){ let e2=en; while(e2>d&&(buf[e2-1]===10||buf[e2-1]===13)) e2--; urls.push(URL.createObjectURL(new Blob([buf.slice(d,e2)],{type:"image/jpeg"}))); }
+    pos=en+9;
+  }
+  if(!$("pdfPages")) return;
+  $("pdfPages").innerHTML = urls.length ? urls.map((u,i)=>`<img src="${u}" alt="${esc(title)} page ${i+1}" draggable="false">`).join("")
+    : `<iframe src="${url}#toolbar=0" title="${esc(title)}" style="width:100%;height:80vh;border:0"></iframe>`;
 }
 function histHTML(blocks){
   return `<div class="box"><div class="box-head"><b>Access history</b><span class="counter">${blocks.length}</span></div>
@@ -634,11 +761,31 @@ function nodeLabels(votes){
   return `<div class="nodes5">${["N1","N2","N3","N4","N5"].map(n=>{ const v=votes[n]||"offline";
     return v==="signed"?`<span class="label green">${ic("i-check")}${n} approved</span>`:v==="rejected"?`<span class="label red">${n} rejected</span>`:`<span class="label">${n} offline</span>`; }).join("")}</div>`;
 }
-function doOpen(btn,id){ return busy(btn,`${SPIN}Opening…`,async()=>{
+function setAccess(btn,id,username,allow){ return busy(btn,SPIN,async()=>{
+  const r=await api(`/documents/${id}/access`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(username?{username,allow}:{allow})});
+  if(!r.ok) throw new Error(await errText(r));
+  setFlash(allow?"success":"warn", username
+    ? (allow?`<b>${esc(user(username).name)}</b> can open this document again.`:`<b>Access revoked.</b> ${esc(user(username).name)} can no longer open this document; the ledger nodes will refuse. Their past openings stay on record.`)
+    : (allow?"<b>Document reinstated.</b> Recipients can open it again.":"<b>Document withdrawn.</b> Nobody can open it any more; the ledger nodes will refuse every request."));
+  await vDoc(id);
+});}
+function doOpen(btn,id){
+  openModal(`<div class="eyebrow">Sign to open</div><h3>Confirm it is you</h3>
+    <p class="muted" style="margin:0 0 16px">Your personal signing key is sealed with your password. Enter it to sign this opening. The ledger nodes check your signature, and the opening is recorded permanently.</p>
+    <div id="signErr" class="flash error hidden" style="margin-bottom:14px">${ic("i-x-circle")}<div id="signErrT"></div></div>
+    <div class="field" style="margin-bottom:0"><label for="signPw">Password for ${esc(ME.username)}</label><input class="form" id="signPw" type="password" autocomplete="current-password"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="signBtn" onclick="signAndOpen(this,'${id}')">${ic("i-key")}Sign and open</button></div>`);
+  $("signPw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("signBtn").click(); });
+}
+function signErr(t){ $("signErrT").textContent=t; $("signErr").classList.remove("hidden"); }
+function signAndOpen(btn,id){ return busy(btn,`${SPIN}Signing…`,async()=>{
+  const pw=$("signPw").value; if(!pw){ signErr("Enter your password."); return; }
   if(OBJ_URL){ URL.revokeObjectURL(OBJ_URL); OBJ_URL=null; }
-  const area=$("openArea");
-  area.innerHTML=`<div class="box"><div class="box-head"><b>Access request</b><span class="label yellow">In progress</span></div>${checkRow("run","Signing your request and waiting for ledger approval…","")}</div>`;
-  const r=await api(`/open/${id}`,{method:"POST"});
+  const r=await api(`/open/${id}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
+  if(r.status===403||r.status===429){ const t=cap(await errText(r)); if($("signPw")){ $("signPw").value=""; signErr(t+"."); } else toast(t,true); return; }
+  closeModal();
+  const area=$("openArea"), ob=$("openBtn");
+  if(r.status===410){ area.innerHTML=`<div class="flash error">${ic("i-lock")}<div><b>Access refused.</b> ${esc(cap(await errText(r)))}.</div></div>`; if(ob) ob.disabled=true; return; }
   if(r.status===423){
     const j=await r.json();
     area.innerHTML=`<div class="flash error">${ic("i-lock")}<div><b>Access refused. The document remains locked.</b><br>Only ${j.valid_votes} of 5 ledger nodes are available and ${j.quorum} approvals are required. This attempt has been recorded.</div></div>
@@ -651,19 +798,23 @@ function doOpen(btn,id){ return busy(btn,`${SPIN}Opening…`,async()=>{
   if(!r.ok){ area.innerHTML=`<div class="flash error">${ic("i-x-circle")}<div>${esc(cap(await errText(r)))}</div></div>`; return; }
   const m=JSON.parse(atob(r.headers.get("X-Nishaan-Meta")));
   const blob=await r.blob(); OBJ_URL=URL.createObjectURL(blob);
-  area.innerHTML=`<div class="flash success">${ic("i-check-circle")}<div><b>Document opened.</b> This opening is recorded as ledger block #${m.block_index}. Your copy is marked for officer #${pad(m.officer_id)}.</div></div>
+  area.innerHTML=`<div class="flash success">${ic("i-check-circle")}<div><b>Document opened.</b> This opening is recorded as ledger block #${m.block_index}. Your copy carries invisible mark ${m.mark_id}, which points to that record${m.visible_mark?" and shows your name on every page":""}.</div></div>
     <div class="box"><div class="box-head"><b>Access request</b><span class="label green">Approved</span><span class="muted small" style="margin-left:auto">${m.valid_votes} of 5 approvals · ${m.quorum} required</span></div>
       ${checkRow("ok","Request signed by "+esc(m.name),"ML-DSA-65 signature "+esc(m.officer_sig_fingerprint)+"…")}
       ${checkRow("ok",`Approved by ${m.valid_votes} of 5 ledger nodes`,"")}${nodeLabels(m.votes)}
       ${checkRow("ok",`Recorded as block #${m.block_index}`,"hash "+esc(m.block_hash))}
       ${checkRow("ok","Decryption key rebuilt from "+m.shares_from.join(", "),"Shamir 3-of-5")}
       ${checkRow("ok","Key delivered under your ML-KEM-768 public key",m.kem_ciphertext_bytes+"-byte capsule "+esc(m.kem_ciphertext_fingerprint)+"…")}
-      ${checkRow("ok","Decrypted and marked for officer #"+pad(m.officer_id),m.doctype==="pdf"?"All "+m.pages+" pages":"Image")}</div>
+      ${checkRow("ok","Decrypted and marked for this opening (mark "+m.mark_id+" → block #"+m.block_index+")",(m.doctype==="pdf"?"All "+m.pages+" pages":"Image")+(m.visible_mark?" · visible name added":" · looks identical to every other copy"))}</div>
     <div class="box viewer"><div class="box-head">
       <span style="display:flex;gap:8px;align-items:center;min-width:0">${ic("i-doc","ic-muted")}<b class="mono" style="font-size:13px;word-break:break-all">${esc(m.filename)}</b><span class="muted small nowrap">${(blob.size/1048576).toFixed(2)} MB</span></span>
       <a class="btn sm" href="${OBJ_URL}" download="${esc(m.filename)}" id="dlBtn">${ic("i-download")}Download</a></div>
-      ${m.doctype==="pdf"?`<iframe src="${OBJ_URL}" title="${esc(m.title)}"></iframe>`:`<div class="imgwrap"><img src="${OBJ_URL}" alt="${esc(m.title)}"></div>`}</div>`;
-  btn.disabled=false; btn.innerHTML=`${ic("i-unlock")}Open again`;
+      <div class="protected" id="pview"><div class="shield-cover" onclick="unshield()">${ic("i-lock")}<b>Protected view</b><span>Screenshots and printing are blocked for this document, and the attempt may be recorded. Click here to continue viewing.</span></div>
+        ${m.doctype==="pdf"?`<div class="pages" id="pdfPages"><div class="muted small">Loading pages…</div></div>`:`<div class="imgwrap"><img src="${OBJ_URL}" alt="${esc(m.title)}" draggable="false"></div>`}</div>
+      <div class="protect-note">${ic("i-shield","ic-muted")}Protected view: screenshots, printing, copying and right-click are blocked here. Every copy also carries an invisible mark that points to this opening.</div></div>`;
+  protectOn(id);
+  if(m.doctype==="pdf") showPdfPages(blob, OBJ_URL, m.title);
+  if(ob){ ob.disabled=false; ob.innerHTML=`${ic("i-unlock")}Open again`; }
   refreshNodes(); refreshHist(id);
 });}
 
@@ -683,6 +834,12 @@ async function vShare(){
     <div class="field"><label for="shareTitle">Title</label><input class="form" id="shareTitle" placeholder="e.g. Fleet movement order 14/26"><div class="hint">If left blank, the file name is used.</div></div>
     <div class="field"><label for="shareClass">Classification <span class="req">*</span></label>
       <select class="form" id="shareClass" style="width:auto;min-width:220px"><option>RESTRICTED</option><option>CONFIDENTIAL</option><option selected>SECRET</option><option>TOP SECRET</option></select></div>
+    <div class="field"><label for="shareExp">Access window</label>
+      <select class="form" id="shareExp" style="width:auto;min-width:220px"><option value="0" selected>No expiry</option><option value="1">1 hour</option><option value="8">8 hours</option><option value="24">24 hours</option><option value="168">7 days</option></select>
+      <div class="hint">When the window closes, the ledger nodes refuse to open the document for anyone. You can also revoke access at any time.</div></div>
+    <div class="field"><label>Copies</label>
+      <div class="pick"><label><input type="checkbox" id="shareVisible"><span class="nm"><b>Also print the officer’s name on every page</b> <span class="muted">· visible deterrent</span></span></label></div>
+      <div class="hint">Off (recommended): every copy looks identical; only the invisible mark, tied to the exact opening, tells them apart.</div></div>
     <div class="field"><label>Recipients <span class="req">*</span></label>
       <div class="pick" id="recips">${officers.map(u=>`<label><input type="checkbox" value="${esc(u.username)}">${avatar(u.username,24)}<span class="nm"><b>${esc(u.name)}</b> <span class="muted">· ${esc(u.username)}</span></span><span class="mono muted">#${pad(u.officer_id)}</span></label>`).join("")}</div>
       <div class="hint">Only the selected officers will be able to open this document. <a href="javascript:void 0" onclick="pickAll(true)">Select all</a> · <a href="javascript:void 0" onclick="pickAll(false)">Clear</a></div></div>
@@ -706,7 +863,7 @@ function doShare(btn){ return busy(btn,`${SPIN}Encrypting…`,async()=>{
   if(!f) throw new Error("Choose a document to share.");
   const rec=[...document.querySelectorAll("#recips input:checked")].map(i=>i.value);
   if(!rec.length) throw new Error("Select at least one recipient.");
-  const fd=new FormData(); fd.append("file",f); fd.append("title",$("shareTitle").value); fd.append("classification",$("shareClass").value); fd.append("recipients",rec.join(","));
+  const fd=new FormData(); fd.append("file",f); fd.append("title",$("shareTitle").value); fd.append("classification",$("shareClass").value); fd.append("recipients",rec.join(",")); fd.append("expires_hours",$("shareExp").value); fd.append("visible_mark",$("shareVisible").checked?"true":"false");
   const r=await api("/documents",{method:"POST",body:fd});
   if(!r.ok) throw new Error(await errText(r));
   const d=await r.json();
@@ -722,10 +879,10 @@ async function vLedger(){
   const admin=ME.role==="admin";
   const badList=(VERIFY?.blocks||[]).filter(b=>!b.ok);
   const banner = !VERIFY ? "" : VERIFY.ok
-    ? `<div class="flash success">${ic("i-check-circle")}<div><b>Ledger verified.</b> All ${VERIFY.checked} record${VERIFY.checked===1?"":"s"} were checked from scratch. Every hash, link, officer signature and node approval is valid.</div></div>`
-    : `<div class="flash error">${ic("i-x-circle")}<div><b>Tampering detected.</b> ${badList.map(b=>"Block #"+b.index).join(", ")} ${badList.length===1?"no longer matches its":"no longer match their"} signatures. Records cannot be altered without detection.</div></div>`;
+    ? `<div class="flash success">${ic("i-check-circle")}<div><b>Ledger verified.</b> All ${VERIFY.checked} record${VERIFY.checked===1?"":"s"} were checked from scratch. Every hash, link, officer signature and node approval is valid, and the main ledger matches the nodes’ own copies (${(VERIFY.node_copies||[]).map(n=>n.node+(n.up_to_date?" ✓":" behind")).join(" · ")}).</div></div>`
+    : `<div class="flash error">${ic("i-x-circle")}<div><b>Tampering detected.</b> ${badList.map(b=>"Block #"+b.index+(b.deleted?" (deleted)":"")).join(", ")}: ${badList.map(b=>b.problems[0]).join("; ")}. Records cannot be altered or removed without detection.</div></div>`;
   let rows="", lastDay="";
-  if(!blocks.length) rows=`<div class="box"><div class="empty">${ic("i-chain","big")}<h3>No records yet</h3><p class="muted">A record is added here each time an officer opens a document.</p></div></div>`;
+  if(!blocks.length) rows=badList.length?"":`<div class="box"><div class="empty">${ic("i-chain","big")}<h3>No records yet</h3><p class="muted">A record is added here each time an officer opens a document.</p></div></div>`;
   else {
     rows=blocks.map(b=>{
       const day=dayOf(b.time), hdr=day!==lastDay?`${lastDay?"</div>":""}<div class="tl-date">${ic("i-clock")}Openings on ${esc(day)}</div><div class="box">`:""; lastDay=day;
@@ -738,17 +895,17 @@ async function vLedger(){
           <span class="sha" onclick="copy('${b.block_hash}','Block hash')" title="${esc(b.block_hash)}">${esc(b.block_hash.slice(0,7))}</span></div></div>`;
     }).join("")+"</div>";
   }
-  const tamper = admin&&blocks.length ? `<h3 class="sec" style="margin-top:32px;color:var(--danger)">Tamper demonstration</h3>
+  const tamper = admin&&(blocks.length||badList.length) ? `<h3 class="sec" style="margin-top:32px;color:var(--danger)">Tamper demonstration</h3>
     <div class="dz"><div class="row" style="flex-wrap:wrap">
       <div class="main" style="min-width:240px"><b>Rewrite a past record</b><div class="meta">Simulates an insider with direct database access changing who opened a document. Afterwards, select Verify ledger.</div></div>
       <div class="right" style="flex-wrap:wrap">
         <select class="form" id="tBlock" style="width:auto" aria-label="Record">${blocks.slice().reverse().map(b=>`<option value="${b.index}">Block #${b.index}</option>`).join("")}</select>
         <select class="form" id="tWho" style="width:auto" aria-label="Officer to blame">${USERS.filter(u=>u.role==="officer").map(u=>`<option value="${esc(u.username)}">Blame ${esc(u.name)}</option>`).join("")}</select>
-        <select class="form" id="tMode" style="width:auto" aria-label="Method"><option value="edit">Edit record</option><option value="rehash">Edit and recompute hash</option></select>
+        <select class="form" id="tMode" style="width:auto" aria-label="Method"><option value="edit">Edit record</option><option value="rehash">Edit and recompute hash</option><option value="delete">Delete record</option></select>
         <button class="btn danger" onclick="doTamper(this)">Tamper</button></div></div>
-      <div class="row"><div class="main"><b>Undo all tampering</b><div class="meta">Restore every record to its sealed original.</div></div><div class="right"><button class="btn" onclick="doRestore(this)">Restore records</button></div></div>
+      <div class="row"><div class="main"><b>Undo all tampering</b><div class="meta">Rebuild the main ledger from the copies held by the nodes.</div></div><div class="right"><button class="btn" onclick="doRestore(this)">Restore records</button></div></div>
     </div>` : "";
-  V().innerHTML=flashHTML()+`<div class="pagehead"><h2>Ledger</h2><button class="btn primary" id="verifyBtn" onclick="doVerify(this)">${ic("i-shield")}Verify ledger</button></div>
+  V().innerHTML=flashHTML()+`<div class="pagehead"><h2>Ledger</h2>${isStaff()?`<button class="btn" onclick="downloadAuth(this,'/ledger/export','NISHAAN_ledger_export.json')" title="Everything needed to check the chain on another computer, offline">${ic("i-download")}Export for offline check</button>`:""}<button class="btn primary" id="verifyBtn" onclick="doVerify(this)">${ic("i-shield")}Verify ledger</button></div>
     <p class="sub">Every opening is a permanent record: the officer's signed request, sealed with a SHA3-256 hash, linked to the previous record and approved by at least four nodes.</p>
     ${banner}${rows}${tamper}`;
 }
@@ -757,7 +914,8 @@ function doTamper(btn){ return busy(btn,"Tampering…",async()=>{
   const idx=+$("tBlock").value, who=$("tWho").selectedOptions[0].textContent.replace("Blame ","");
   const r=await api("/ledger/tamper",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:idx,mode:$("tMode").value,username:$("tWho").value})});
   if(!r.ok) throw new Error(await errText(r));
-  VERIFY=null; setFlash("warn",`<b>Block #${idx} was rewritten</b> to name ${esc(who)}. It now looks normal in the list. Select <b>Verify ledger</b> to check it.`); await vLedger();
+  const del=$("tMode").value==="delete";
+  VERIFY=null; setFlash("warn",del?`<b>Block #${idx} was deleted</b> from the main ledger. Select <b>Verify ledger</b>: the nodes still hold their own copies.`:`<b>Block #${idx} was rewritten</b> to name ${esc(who)}. It now looks normal in the list. Select <b>Verify ledger</b> to check it.`); await vLedger();
 });}
 function doRestore(btn){ return busy(btn,"Restoring…",async()=>{
   const r=await api("/ledger/restore",{method:"POST"}); if(!r.ok) throw new Error(await errText(r));
@@ -793,10 +951,13 @@ function doTrace(btn){ return busy(btn,`${SPIN}Analysing…`,async()=>{
   $("traceOut").innerHTML=`<div class="box" id="traceResult"><div class="box-head"><b>Source identified</b>${j.was_recipient?'<span class="label">Authorised recipient</span>':'<span class="label red">Not a recipient</span>'}${j.layers_agree?"":'<span class="label yellow">Marks disagree</span>'}</div>
       <div class="result">${avatar(j.username,56)}<div><div class="nm" id="traceName2">${esc(j.name)}</div><div class="muted">Officer #${pad(j.officer_id)} · ${esc(j.username)}</div></div></div>
       <div class="kv">
-        <div>Pixel mark</div><div>${L.pixel!=null?`Officer #${pad(L.pixel)} · ${L.pages_agreeing||1} of ${L.pages_checked} page${L.pages_checked===1?"":"s"} agree`:"Not readable"}</div>
+        <div>Pixel mark</div><div>${L.pixel!=null?`${L.pixel_mark>=1024?"Mark "+L.pixel_mark+" → ":""}Officer #${pad(L.pixel)} · ${L.pages_agreeing||1} of ${L.pages_checked} page${L.pages_checked===1?"":"s"} agree`:"Not readable"}</div>
+        ${j.event?`<div>Decryption event</div><div><b>Ledger block #${j.event.block_index}</b> · ${esc(fullDate(j.event.time))} · session <span class="mono">${esc(j.event.session)}</span></div>`:""}
         <div>Confidence</div><div>${L.pixel!=null?`<span class="meter"><span style="width:${pct}%"></span></span>${pct}%`:"—"}</div>
         <div>Metadata mark</div><div>${L.metadata!=null?"Officer #"+pad(L.metadata):'<span class="muted">Not present (image file, or removed)</span>'}</div>
+        <div>Wrong-match chance</div><div><b>${odds(j.false_match_log10)}</b> <span class="muted small">· probability that a copy without this officer's mark reads like this by chance</span></div>
         <div>Conclusion</div><div>${esc(j.verdict)}</div></div></div>
+    <div class="flash warn" id="caseNote">${ic("i-shield")}<div><b>Case ${esc(j.case_id)} opened, awaiting confirmation.</b> Under the two-person rule, ${ME.role==="admin"?"the Security Officer":"the Distribution Officer"} must confirm this finding before the signed evidence report is released. <a href="#/cases">Go to leak cases</a></div></div>
     <div class="box"><div class="box-head"><b>Ledger evidence</b><span class="counter">${j.ledger_blocks.length}</span></div>
       ${j.ledger_blocks.length?j.ledger_blocks.map(b=>`<div class="row">${ic("i-chain","ic-muted")}<div class="main">Block #${b.index} · opened ${esc(fullDate(b.time))}<div class="meta">${b.valid_votes} of 5 node approvals · session <span class="mono">${esc(b.session)}</span></div></div><div class="right"><span class="sha" onclick="copy('${b.block_hash}','Block hash')">${esc(b.block_hash.slice(0,7))}</span></div></div>`).join("")
         :`<div class="row"><div class="main" style="color:var(--danger)">No signed opening by this officer is on the ledger.</div></div>`}</div>`;
@@ -812,7 +973,7 @@ async function vNodes(){
       :`<div class="flash error">${ic("i-lock")}<div><b>All documents are locked.</b> Only ${up} of 5 nodes are online and ${q} are required.</div></div>`}</div>
     <div class="box"><div class="box-head"><b>Nodes</b><span class="counter">5</span></div>
       ${NODES.nodes.map(n=>`<div class="row" data-node="${n.name}">${ic("i-server","ic-muted")}
-        <div class="main"><b>${n.name}</b> ${n.online?'<span class="label green">Online</span>':'<span class="label">Offline</span>'}<div class="meta">Signing key <span class="mono">${esc(n.key_fingerprint)}</span></div></div>
+        <div class="main"><b>${n.name}</b> ${n.online?'<span class="label green">Online</span>':'<span class="label">Offline</span>'}<div class="meta">Signing key <span class="mono">${esc(n.key_fingerprint)}</span> · holds its own copy of ${n.records_held??0} ledger record${n.records_held===1?"":"s"}</div></div>
         <div class="right"><button class="btn sm ${n.online?"":"primary"}" onclick="toggleNode(this,'${n.name}',${!n.online})">${n.online?"Take offline":"Bring online"}</button></div></div>`).join("")}</div>`;
 }
 function toggleNode(btn,name,online){ return busy(btn,SPIN,async()=>{
@@ -830,7 +991,7 @@ async function vPeople(){
     <div class="layout"><div>
       <div class="box"><div class="box-head"><b>Officers</b><span class="counter">${offs.length}</span><span class="muted small">${act} active</span></div>
         ${USERS.map(u=>`<div class="row" data-user="${esc(u.username)}">${avatar(u.username,32)}
-          <div class="main"><div><b>${esc(u.name)}</b> ${u.role==="admin"?'<span class="label blue">Distribution Officer</span>':`<span class="mono muted">#${pad(u.officer_id)}</span>`} ${u.active===false?'<span class="label">Deactivated</span>':""}</div>
+          <div class="main"><div><b>${esc(u.name)}</b> ${ROLE_NAME[u.role]?`<span class="label blue">${ROLE_NAME[u.role]}</span>`:`<span class="mono muted">#${pad(u.officer_id)}</span>`} ${u.active===false?'<span class="label">Deactivated</span>':""}</div>
             <div class="meta">${esc(u.username)} · signing key <span class="mono">${esc(u.dsa_pub_fingerprint)}</span></div></div>
           <div class="right">${u.role==="admin"?"":(u.active===false?`<button class="btn sm" onclick="setActive(this,'${esc(u.username)}',true)">Reactivate</button>`:`<button class="btn sm danger" onclick="setActive(this,'${esc(u.username)}',false)">Deactivate</button>`)}</div></div>`).join("")}
       </div>
@@ -868,12 +1029,12 @@ async function vAudit(){
   await loadDocs();
   const ev=await (await api("/audit")).json(), bad=["DENIED","LOGIN_FAILED","TAMPER"];
   const shown=AUDIT_FILTER==="alerts"?ev.filter(e=>bad.includes(e.kind)):ev, nBad=ev.filter(e=>bad.includes(e.kind)).length;
-  const lc={DENIED:"red",LOGIN_FAILED:"red",TAMPER:"red",OPEN:"green",SHARE:"blue",RESTORE:"yellow",RESET:"yellow",NODE:"yellow",USER_ADDED:"blue",USER_DEACTIVATED:"yellow",USER_REACTIVATED:"blue"};
-  const nm={DENIED:"Access refused",LOGIN_FAILED:"Sign-in failed",TAMPER:"Record tampered",OPEN:"Document opened",SHARE:"Document shared",TRACE:"Leak traced",RESTORE:"Records restored",RESET:"Data reset",NODE:"Node changed",LOGIN:"Signed in",USER_ADDED:"Person added",USER_DEACTIVATED:"Account deactivated",USER_REACTIVATED:"Account reactivated"};
+  const lc={DENIED:"red",LOGIN_FAILED:"red",TAMPER:"red",OPEN:"green",SHARE:"blue",RESTORE:"yellow",RESET:"yellow",NODE:"yellow",USER_ADDED:"blue",USER_DEACTIVATED:"yellow",USER_REACTIVATED:"blue",ACCESS_REVOKED:"yellow",DOC_WITHDRAWN:"yellow",ACCESS_RESTORED:"blue",CASE_CONFIRMED:"solid-red",CASE_REJECTED:"",EVIDENCE:"blue",EXPORT:"blue"};
+  const nm={DENIED:"Access refused",LOGIN_FAILED:"Sign-in failed",TAMPER:"Record tampered",OPEN:"Document opened",SHARE:"Document shared",TRACE:"Leak traced",RESTORE:"Records restored",RESET:"Data reset",NODE:"Node changed",LOGIN:"Signed in",USER_ADDED:"Person added",USER_DEACTIVATED:"Account deactivated",USER_REACTIVATED:"Account reactivated",ACCESS_REVOKED:"Access revoked",DOC_WITHDRAWN:"Document withdrawn",ACCESS_RESTORED:"Access restored",CASE_CONFIRMED:"Leak confirmed",CASE_REJECTED:"Case rejected",EVIDENCE:"Evidence exported",EXPORT:"Ledger exported",SCREENSHOT:"Screenshot blocked"};
   V().innerHTML=`<div class="pagehead"><h2>Audit log</h2>
       <select class="form" style="width:auto" id="auditFilter" onchange="AUDIT_FILTER=this.value;vAudit()" aria-label="Filter"><option value="all" ${AUDIT_FILTER==="all"?"selected":""}>All events</option><option value="alerts" ${AUDIT_FILTER==="alerts"?"selected":""}>Refusals and alerts</option></select>
-      <button class="btn" onclick="vAudit()">Refresh</button></div>
-    <p class="sub">Every action is recorded, including refused attempts. ${nBad} alert${nBad===1?"":"s"} in total.</p>
+      <button class="btn" onclick="vAudit()">Refresh</button><button class="btn primary" onclick="verifyAudit(this)">${ic("i-shield")}Verify audit log</button></div>
+    <p class="sub">Every action is recorded, including refused attempts. The log is itself hash-chained, so a quiet edit by an insider is detected. ${nBad} alert${nBad===1?"":"s"} in total.</p><div id="auditState"></div>
     <div class="box scroll">${shown.length?`<table class="t"><thead><tr><th>Event</th><th>User</th><th>Document</th><th>Details</th><th>Time</th></tr></thead><tbody>${
       shown.map(e=>{ const d=DOCS.find(x=>x.doc_id===e.doc_id); return `<tr><td class="nowrap"><span class="label ${lc[e.kind]||""}">${esc(nm[e.kind]||e.kind)}</span></td>
         <td class="nowrap">${e.username?`${avatar(e.username,20)} ${esc(user(e.username).name)}`:""}</td>
@@ -882,18 +1043,87 @@ async function vAudit(){
       :`<div class="empty"><span class="muted">No events match this filter.</span></div>`}</div>`;
 }
 
+function verifyAudit(btn){ return busy(btn,`${SPIN}Verifying…`,async()=>{
+  const v=await (await api("/audit/verify")).json();
+  $("auditState").innerHTML=v.ok?`<div class="flash success">${ic("i-check-circle")}<div><b>Audit log verified.</b> All ${v.checked} entries are intact: every entry is still linked to the one before it.</div></div>`
+    :`<div class="flash error">${ic("i-x-circle")}<div><b>The audit log was altered.</b> The chain breaks at entry #${v.first_bad_event}. Someone changed or deleted a record directly in the database.</div></div>`;
+});}
+
+/* ---------------------------------------------------------------- Leak cases (two-person rule) */
+async function vCases(){
+  await loadDocs(); USERS=await (await api("/users")).json();
+  const cs=await (await api("/cases")).json();
+  const lab={PENDING:'<span class="label yellow">Awaiting confirmation</span>',CONFIRMED:'<span class="label solid-red">Leak confirmed</span>',REJECTED:'<span class="label">Rejected</span>'};
+  const other=ME.role==="admin"?"the Security Officer":"the Distribution Officer";
+  const rows=cs.map(c=>`<div class="row" data-case="${esc(c.case_id)}">
+      <span class="case-id">${esc(c.case_id)}</span>${avatar(c.username,32)}
+      <div class="main"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(c.name)}</b><span class="muted">#${pad(c.officer_id)}</span>${lab[c.status]||""}</div>
+        <div class="meta">Leaked copy of <a href="#/doc/${c.doc_id}">${esc(c.doc_title)}</a> · traced by ${esc(c.requested_by_name)} ${when(c.requested_at)} · mark ${Math.round((c.confidence||0)*100)}% · wrong-match ${odds(c.false_match_log10)} · ${c.ledger_blocks} ledger record${c.ledger_blocks===1?"":"s"}</div>
+        ${c.decided_by?`<div class="meta">${c.status==="CONFIRMED"?"Confirmed":"Rejected"} by <b>${esc(c.decided_by_name)}</b> ${when(c.decided_at)}${c.note?" · “"+esc(c.note)+"”":""}</div>`:""}</div>
+      <div class="right" style="flex-wrap:wrap">${c.status==="PENDING"?(c.requested_by===ME.username?`<span class="muted small">Waiting for ${other}</span>`
+          :`<button class="btn sm" onclick="decideCase('${c.case_id}',false)">Reject</button><button class="btn sm primary" onclick="decideCase('${c.case_id}',true)">${ic("i-check")}Confirm</button>`)
+        :c.status==="CONFIRMED"?`<button class="btn sm" onclick="downloadAuth(this,'/cases/${c.case_id}/bundle','NISHAAN_evidence_${c.case_id}.json')">Evidence file</button><button class="btn sm primary" onclick="downloadAuth(this,'/cases/${c.case_id}/report','NISHAAN_evidence_${c.case_id}.pdf')">${ic("i-download")}Evidence report</button>`:""}</div></div>`).join("");
+  V().innerHTML=flashHTML()+`<div class="pagehead"><h2>Leak cases</h2><a class="btn" href="#/trace">${ic("i-search")}Trace a leaked copy</a></div>
+    <p class="sub">A trace only names a suspect. Under the <b>two-person rule</b>, a second officer must confirm the finding before the court-ready evidence report is released, so no single person can frame an officer.</p>
+    <div class="steps2"><div><b>1 · Trace</b>One officer uploads the leaked copy</div><div><b>2 · Confirm</b>A different officer checks and confirms</div><div><b>3 · Evidence</b>Signed PDF report with the Section 63 data, checkable offline</div></div>
+    <div class="box"><div class="box-head"><b>Cases</b><span class="counter">${cs.length}</span></div>
+      ${rows||`<div class="empty">${ic("i-shield","big")}<h3>No cases yet</h3><p class="muted">When a leaked copy is traced, a case opens here for confirmation.</p><a class="btn primary" href="#/trace">Trace a leaked copy</a></div>`}</div>`;
+}
+function decideCase(id,approve){
+  openModal(`<div class="eyebrow">Two-person rule · case ${esc(id)}</div><h3>${approve?"Confirm this leak finding?":"Reject this finding?"}</h3>
+    <p class="muted" style="margin:0 0 16px">${approve?"Confirm only after checking the ledger record and the mark. Confirming releases the signed evidence report and flags the officer in Insider watch.":"The case stays on record as rejected and no evidence is released."}</p>
+    <div class="field" style="margin-bottom:0"><label for="caseNote2">Note (optional)</label><input class="form" id="caseNote2" placeholder="${approve?"e.g. Checked against ledger block #5":"e.g. Copy too damaged, re-examine"}"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn ${approve?"primary":"danger"}" onclick="sendDecision(this,'${id}',${approve})">${approve?"Confirm finding":"Reject finding"}</button></div>`);
+}
+function sendDecision(btn,id,approve){ return busy(btn,SPIN,async()=>{
+  const r=await api(`/cases/${id}/decision`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({approve,note:$("caseNote2").value})});
+  if(!r.ok) throw new Error(await errText(r));
+  closeModal(); setFlash(approve?"success":"info",approve?`<b>Case ${esc(id)} confirmed.</b> The signed evidence report is now available.`:`<b>Case ${esc(id)} rejected.</b>`);
+  await vCases();
+});}
+
+/* ---------------------------------------------------------------- Insider watch */
+async function vWatch(){
+  USERS=await (await api("/users")).json(); await loadDocs();
+  const al=await (await api("/alerts")).json(), c=al.counts;
+  const sev={critical:'<span class="label solid-red">Critical</span>',high:'<span class="label red">High</span>',medium:'<span class="label yellow">Medium</span>'};
+  const rows=al.alerts.map(a=>{ const d=DOCS.find(x=>x.doc_id===a.doc_id); return `<div class="row">${avatar(a.username,32)}
+      <div class="main"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(a.name)}</b>${sev[a.severity]}</div>
+        <div class="meta">${esc(a.text)}${d?` · <a href="#/doc/${d.doc_id}">${esc(d.title)}</a>`:""}</div></div>
+      <div class="right"><span class="muted small nowrap">${when(a.time)}</span></div></div>`; }).join("");
+  V().innerHTML=`<div class="pagehead"><h2>Insider watch</h2><button class="btn" onclick="vWatch()">Refresh</button></div>
+    <p class="sub">Early warning. Watermarks catch a leak after it happens; Insider watch flags risky behaviour <b>before</b> one: openings at night, bursts of openings, refused attempts, repeated failed sign-ins, blocked screenshots and tampering.</p>
+    <div class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="kpi ${c.critical?"bad":""}"><div class="k">Critical</div><div class="v">${c.critical}</div><div class="n">tampering or a confirmed leak</div></div>
+      <div class="kpi ${c.high?"bad":""}"><div class="k">High</div><div class="v">${c.high}</div><div class="n">bursts, repeated refusals</div></div>
+      <div class="kpi ${c.medium?"warn":""}"><div class="k">Medium</div><div class="v">${c.medium}</div><div class="n">after-hours, single refusals</div></div></div>
+    <div class="layout"><div>
+      <div class="box"><div class="box-head"><b>Alerts · last 30 days</b><span class="counter">${al.alerts.length}</span></div>
+        ${rows||`<div class="empty">${ic("i-check-circle","big")}<h3>All clear</h3><p class="muted">No risky behaviour detected in the last 30 days.</p></div>`}</div></div>
+    <aside class="side">
+      <div class="sb"><h3>Risk ranking</h3>${al.people.length?al.people.map(p=>`<div class="risk">${avatar(p.username,24)}<div class="nm"><b>${esc(p.name)}</b><div class="small muted">${p.alerts} alert${p.alerts===1?"":"s"}</div></div><div class="bar"><span class="${p.score>=40?"hi":""}" style="width:${p.score}%"></span></div><span class="sc">${p.score}</span></div>`).join(""):'<p class="muted" style="margin:0">Nobody is flagged.</p>'}</div>
+      <div class="sb"><h3>Rules</h3>
+        <div class="line">${ic("i-clock")}<span>Opening between 22:00 and 06:00 IST</span></div>
+        <div class="line">${ic("i-doc")}<span>3 or more openings within 10 minutes</span></div>
+        <div class="line">${ic("i-lock")}<span>Refused attempts: not a recipient, revoked, expired or wrong password</span></div>
+        <div class="line">${ic("i-alert")}<span>3 failed sign-ins within an hour</span></div>
+        <div class="line">${ic("i-shield")}<span>Screenshot or print attempts blocked in the protected viewer</span></div>
+        <div class="line">${ic("i-chain")}<span>Ledger tampering and confirmed leaks</span></div></div>
+    </aside></div>`;
+}
+
 /* ---------------------------------------------------------------- Settings / Keys */
 async function vSettings(){
   const h=await (await api("/health")).json(); USERS=await (await api("/users")).json(); await refreshNodes();
-  const names={file:"File encryption",key_split:"Key custody",signatures:"Signatures",key_delivery:"Key delivery",hash:"Ledger hashing",passwords:"Password storage"};
+  const names={file:"File encryption",key_split:"Key custody",signatures:"Signatures",key_delivery:"Key delivery",hash:"Ledger hashing",passwords:"Password storage",key_storage:"Key storage"};
   const admin=ME.role==="admin";
   V().innerHTML=`<div class="narrow">
-    <h1 class="title">${admin?"Settings":"Keys"}</h1><p class="sub">Cryptographic configuration and the public-key fingerprints of every participant.</p>
+    <h1 class="title">${ME.role==="officer"?"My keys":"Settings"}</h1><p class="sub">Cryptographic configuration and the public-key fingerprints of every participant.</p>
     <h3 class="sec">Cryptography</h3>
-    <div class="box"><div class="kv">${Object.entries(h.algorithms).map(([k,v])=>`<div>${esc(names[k]||k)}</div><div>${esc(v)}</div>`).join("")}<div>Version</div><div>NISHAAN ${esc(h.version)}</div></div></div>
+    <div class="box"><div class="kv">${Object.entries(h.algorithms).map(([k,v])=>`<div>${esc(names[k]||k)}</div><div>${esc(v)}</div>`).join("")}<div>Evidence authority</div><div>ML-DSA-65 key <span class="mono">${esc(h.evidence_authority||"")}</span> · signs every evidence report</div><div>Version</div><div>NISHAAN ${esc(h.version)}</div></div></div>
     <h3 class="sec" style="margin-top:32px">Public keys</h3>
     <div class="box scroll"><table class="t"><thead><tr><th>Holder</th><th>ML-DSA-65 signing key</th><th>ML-KEM-768 key</th></tr></thead><tbody>
-      ${USERS.map(u=>`<tr><td class="nowrap">${avatar(u.username,20)} <b>${esc(u.name)}</b> <span class="muted">#${pad(u.officer_id)}</span>${u.username===ME.username?' <span class="label blue">You</span>':""}</td><td class="mono">${esc(u.dsa_pub_fingerprint)}</td><td class="mono">${esc(u.kem_pub_fingerprint)}</td></tr>`).join("")}
+      ${USERS.map(u=>`<tr><td class="nowrap">${avatar(u.username,20)} <b>${esc(u.name)}</b> <span class="muted">${ROLE_NAME[u.role]||"#"+pad(u.officer_id)}</span>${u.username===ME.username?' <span class="label blue">You</span>':""}${u.keys_sealed?' <span class="label green" title="Private key sealed with the owner\'s password">Sealed</span>':""}</td><td class="mono">${esc(u.dsa_pub_fingerprint)}</td><td class="mono">${esc(u.kem_pub_fingerprint)}</td></tr>`).join("")}
       ${NODES.nodes.map(n=>`<tr><td class="nowrap">${ic("i-server","ic-muted")} <b>Ledger node ${n.name}</b></td><td class="mono">${esc(n.key_fingerprint)}</td><td class="muted">—</td></tr>`).join("")}
     </tbody></table></div>
     <p class="small muted">A fingerprint is the first 16 hexadecimal characters of the SHA3-256 hash of the public key.</p>
